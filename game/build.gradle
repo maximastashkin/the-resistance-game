@@ -1,0 +1,16 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.4.32'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.4.32'
+}
+
+group 'ru.rsreu'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+}
