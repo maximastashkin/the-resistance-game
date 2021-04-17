@@ -2,6 +2,10 @@ package commands
 
 import Game
 
+/**
+ * Команда для голосования за выбор команды для миссии
+ * @property agreement результат голоса за выбор команды для миссии (true - agree, false - disagree)
+ */
 class VoteForTeamCommand(
     override val senderId: Int,
     override val senderName: String,
@@ -16,6 +20,6 @@ class VoteForTeamCommand(
             throw CommandExecutionException("Игрок уже проголосовал за команду ($senderId, $senderName).")
         }
 
-        game.setVote(senderId, agreement)
+        game.setTeamVote(senderId, agreement)
     }
 }

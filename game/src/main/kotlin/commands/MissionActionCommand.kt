@@ -2,6 +2,10 @@ package commands
 
 import Game
 
+/**
+ * Команда для голосования за результат миссии
+ * @property action результат миссии (true - success, false - fail)
+ */
 class MissionActionCommand(
     override val senderId: Int,
     override val senderName: String,

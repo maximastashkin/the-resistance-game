@@ -2,6 +2,9 @@ package commands
 
 import Game
 
+/**
+ * Команда для запуска игры
+ */
 class StartGameCommand(override val senderId: Int,override val senderName: String) : Command {
     override fun execute(game: Game) {
         if (!game.isHost(senderId)) {

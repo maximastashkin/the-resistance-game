@@ -2,6 +2,9 @@ package commands
 
 import Game
 
+/**
+ * Команда для подключения к сессии
+ */
 class JoinGameCommand(override val senderId: Int,override val senderName: String) : Command {
     override fun execute(game: Game) {
         if (game.gameState != GameState.LOBBY) {

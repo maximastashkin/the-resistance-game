@@ -4,6 +4,10 @@ import Game
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+/**
+ * Команда для выбора лидером игрока для миссии
+ * @property userToMission идентификатор выбранного игрока для миссии
+ */
 class ChoosePlayerForMissionCommand(
     override val senderId: Int,
     override val senderName: String,
