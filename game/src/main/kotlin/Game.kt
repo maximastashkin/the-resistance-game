@@ -28,7 +28,7 @@ class Game(private val id: Int, private val hostId: Int, private val hostName: S
     private var players: MutableList<Player> = mutableListOf()
     private var missions: List<Mission> = emptyList()
 
-    private var winner = Role.NONE
+    var winner = Role.NONE
 
     var gameState: GameState = GameState.LOBBY
 
@@ -137,6 +137,12 @@ class Game(private val id: Int, private val hostId: Int, private val hostName: S
     fun isContainsTeammate(id: Int): Boolean = teammates.contains(id)
 
     /**
+     * Возвращает идентификатор лидера миссии
+     * @return идентификатор лидера миссии
+     */
+    fun getLeaderId(): Int = players[missionLeader].id
+
+    /**
      * Получает количество игроков для текущей миссии
      * @return количество игроков для текущей миссии
      */
@@ -224,7 +230,7 @@ class Game(private val id: Int, private val hostId: Int, private val hostName: S
      */
     private fun setAllVotesToUnvoted() {
         for (key in votes.keys) {
-            votes[key] = VoteResult.DISAGREE
+            votes[key] = VoteResult.UNVOTED
         }
     }
 
@@ -303,12 +309,18 @@ class Game(private val id: Int, private val hostId: Int, private val hostName: S
      * Считает количество выигранных миссий предателями
      * @return количество миссий, которые выиграли предатели
      */
-    private fun getCountFailedMissions(): Int = missions.count { it.missionResult == MissionResult.FAIL }
+     fun getCountFailedMissions(): Int = missions.count { it.missionResult == MissionResult.FAIL }
 
     /**
      * Считает количество выигранных миссий сопротивлением
      * @return количество миссий, которые выиграли сопротивление
      */
-    private fun getCountSuccessedMissions(): Int = missions.count { it.missionResult == MissionResult.SUCCESS }
+    fun getCountSuccessedMissions(): Int = missions.count { it.missionResult == MissionResult.SUCCESS }
 
+    //FOR TESTS
+    fun getTraitors(): List<Player> = players.filter { it.isTraitor() }
+    fun getLeader(): Player = players[missionLeader]
+    fun getPlayersToMission(): List<Player> = players.filter { it.id != getLeaderId() }.subList(0, missions[currentMission].players - 1)
+    fun getPlayersExcludeLeader(): List<Player> = players.filter { it.id != getLeaderId() }
+    fun getLastPlayer(): Player = players.last { it.id != getLeaderId() }
 }

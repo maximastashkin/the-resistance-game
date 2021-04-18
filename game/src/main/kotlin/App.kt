@@ -12,5 +12,4 @@ fun main() {
 
     val string = Json.encodeToString(game)
     println(string)
-
 }

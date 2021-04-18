@@ -18,7 +18,7 @@ class ChoosePlayerForMissionCommand(
             throw CommandExecutionException("Попытка добавления игрока во время другой стадии игры ($senderId, $senderName, $userToMission).")
         }
 
-        if (senderId != game.missionLeader) {
+        if (senderId != game.getLeaderId()) {
             throw CommandExecutionException("Попытка добавления игрока в команду не лидером ($senderId, $senderName).")
         }
 
