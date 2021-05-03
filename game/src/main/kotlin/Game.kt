@@ -110,7 +110,7 @@ class Game(private val id: Int, private val hostId: Int, private val hostName: S
             }
         }
 
-        votes = players.map { it.id to VoteResult.UNVOTED }.toMap() as MutableMap<Int, VoteResult>
+        votes = players.associate { it.id to VoteResult.UNVOTED } as MutableMap<Int, VoteResult>
         missionLeader = Random.nextInt(playerCount())
         gameState = GameState.START
         startNewTeaming()
@@ -123,7 +123,6 @@ class Game(private val id: Int, private val hostId: Int, private val hostName: S
      */
     fun addPlayerToMission(playerId: Int) {
         teammates[playerId] = MissionResult.NONE
-
         if (teammates.size == getCountOfPlayerToCurrentMission()) {
             startVoting()
         }
