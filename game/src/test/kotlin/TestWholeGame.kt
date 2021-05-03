@@ -1,6 +1,11 @@
-import commands.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import ru.tinkoff.resistance.game.Game
+import ru.tinkoff.resistance.game.GameConfiguration
+import ru.tinkoff.resistance.game.GameState
+import ru.tinkoff.resistance.game.Role
+import ru.tinkoff.resistance.game.commands.*
+import ru.tinkoff.resistance.game.commands.*
 
 class TestWholeGame {
 

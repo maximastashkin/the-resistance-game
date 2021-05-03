@@ -1,3 +1,5 @@
+package ru.tinkoff.resistance.game
+
 import kotlinx.serialization.Serializable
 
 @Serializable

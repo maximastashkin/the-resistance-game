@@ -1,8 +1,7 @@
-package commands
+package ru.tinkoff.resistance.game.commands
 
-import Game
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import ru.tinkoff.resistance.game.Game
+import ru.tinkoff.resistance.game.GameState
 
 /**
  * Команда для выбора лидером игрока для миссии

@@ -1,4 +1,5 @@
-import kotlinx.serialization.decodeFromString
+package ru.tinkoff.resistance.game
+
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 

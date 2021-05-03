@@ -1,4 +1,6 @@
-import commands.Command
+package ru.tinkoff.resistance.game
+
+import ru.tinkoff.resistance.game.commands.Command
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -225,7 +227,7 @@ class Game(private val id: Int, private val hostId: Int, private val hostName: S
     }
 
     /**
-     * Устанавливает словарь (playerID - VoteResult) в исходное состояние (никто не проголосовал)
+     * Устанавливает словарь (playerID - ru.tinkoff.resistanse.game.VoteResult) в исходное состояние (никто не проголосовал)
      */
     private fun setAllVotesToUnvoted() {
         for (key in votes.keys) {

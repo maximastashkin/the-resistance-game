@@ -1,6 +1,7 @@
-package commands
+package ru.tinkoff.resistance.game.commands
 
-import Game
+import ru.tinkoff.resistance.game.Game
+import ru.tinkoff.resistance.game.GameState
 
 /**
  * Команда для голосования за выбор команды для миссии

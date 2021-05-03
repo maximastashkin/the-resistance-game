@@ -1,3 +1,5 @@
+package ru.tinkoff.resistance.game
+
 /**
  * Состояние игры
  * @property LOBBY - состояние, в котором подключаются игроки

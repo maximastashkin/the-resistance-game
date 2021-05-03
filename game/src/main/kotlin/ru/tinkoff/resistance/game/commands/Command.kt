@@ -1,6 +1,6 @@
-package commands
+package ru.tinkoff.resistance.game.commands
 
-import Game
+import ru.tinkoff.resistance.game.Game
 
 /**
  * Интерфейс для команд

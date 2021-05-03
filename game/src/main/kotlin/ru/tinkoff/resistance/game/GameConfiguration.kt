@@ -1,3 +1,5 @@
+package ru.tinkoff.resistance.game
+
 /**
  * Класс для конфигурации игры
  * @property MAX_PLAYERS максимальное число игроков в игре

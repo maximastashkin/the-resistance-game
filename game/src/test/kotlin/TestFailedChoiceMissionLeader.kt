@@ -1,8 +1,11 @@
-import commands.ChoosePlayerForMissionCommand
-import commands.JoinGameCommand
-import commands.StartGameCommand
-import commands.VoteForTeamCommand
+import ru.tinkoff.resistance.game.commands.ChoosePlayerForMissionCommand
+import ru.tinkoff.resistance.game.commands.JoinGameCommand
+import ru.tinkoff.resistance.game.commands.StartGameCommand
+import ru.tinkoff.resistance.game.commands.VoteForTeamCommand
 import org.junit.jupiter.api.Test
+import ru.tinkoff.resistance.game.Game
+import ru.tinkoff.resistance.game.GameState
+import ru.tinkoff.resistance.game.Role
 
 class TestFailedChoiceMissionLeader {
 
