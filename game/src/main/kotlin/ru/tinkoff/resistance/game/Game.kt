@@ -25,7 +25,7 @@ import kotlin.random.Random
  * @constructor добавляет в список игроков создателя сессии
  */
 @Serializable
-class Game(private val id: Int, private val hostId: Int, private val hostName: String) {
+class Game(val id: Int, val hostId: Int, private val hostName: String) {
 
     private var players: MutableList<Player> = mutableListOf()
     private var missions: List<Mission> = emptyList()

@@ -11,6 +11,8 @@ class PlayerService(
 
     fun findById(id: Int): Player = dao.findById(id)
 
+    fun findByApiId(apiId: Long): Player = dao.findByApiId(apiId)
+
     fun create(apiId: Long, name: String, currentGameId: Int?): Player = transaction(db) {
         dao.create(apiId, name, currentGameId)
     }

@@ -15,6 +15,12 @@ class PlayerDao(private val db: Database) {
         }.first())
     }
 
+    fun findByApiId(apiId: Long): Player = transaction(db) {
+        extractPlayer(Players.select {
+            Players.apiId eq apiId
+        }.first())
+    }
+
     fun create(apiId: Long, name: String, currentGameId: Int?): Player = transaction(db) {
         val id = Players.insertAndGetId {
             it[Players.apiId] = apiId

@@ -41,6 +41,10 @@ dependencies {
     implementation("org.postgresql:postgresql:$postgres_version")
     implementation("org.flywaydb:flyway-core:$flyway_version")
     implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodein_version")
+
+    implementation(project(":game"))
+    implementation(project(":shared-models"))
+
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
 }
 
