@@ -1,4 +1,4 @@
-package ru.tinkoff.resistance.game.commands
+package ru.tinkoff.resistance.errocodes
 
 enum class CommandErrorCode(num: Int) {
     ENTER_TO_STARTED_GAME(0),

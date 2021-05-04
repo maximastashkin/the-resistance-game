@@ -16,6 +16,7 @@ import ru.tinkoff.resistance.service.game.gameComponents
 import ru.tinkoff.resistance.service.game.gameModule
 import ru.tinkoff.resistance.service.player.playerComponents
 import ru.tinkoff.resistance.service.player.playerModule
+import ru.tinkoff.resistance.service.plugin.configureCommandExecutionExceptionHandler
 import ru.tinkoff.resistance.service.plugin.configureSerialization
 
 fun main() {
@@ -28,6 +29,7 @@ fun main() {
             gameComponents()
         }
         configureSerialization()
+        configureCommandExecutionExceptionHandler()
         playerModule()
         gameModule()
     }
