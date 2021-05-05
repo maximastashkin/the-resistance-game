@@ -106,7 +106,7 @@ fun Application.gameModule() {
                         )
                         GameState.MISSION -> call.respond(HttpStatusCode.OK, game.teammates.keys.toList())
                         GameState.END -> call.respond(
-                            HttpStatusCode.NotAcceptable,
+                            HttpStatusCode.Gone,
                             GameResponsesFormer.formEndGameResponse(game, playerService)
                         )
                         else -> call.respond(HttpStatusCode.OK)
@@ -126,7 +126,7 @@ fun Application.gameModule() {
                             GameResponsesFormer.formTeamingInfoResponse(game, playerService)
                         )
                         GameState.END -> call.respond(
-                            HttpStatusCode.NotAcceptable,
+                            HttpStatusCode.Gone,
                             GameResponsesFormer.formEndGameResponse(game, playerService)
                         )
                         else -> call.respond(HttpStatusCode.OK)
