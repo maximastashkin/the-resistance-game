@@ -4,6 +4,7 @@ import ru.tinkoff.resistance.game.commands.Command
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import ru.tinkoff.resistance.model.role.Role
 import kotlin.random.Random
 
 /**
@@ -27,7 +28,7 @@ import kotlin.random.Random
 @Serializable
 class Game(val id: Int, val hostId: Int, private val hostName: String) {
 
-    private var players: MutableList<Player> = mutableListOf()
+    var players: MutableList<Player> = mutableListOf()
     private var missions: List<Mission> = emptyList()
 
     var winner = Role.NONE
@@ -39,7 +40,7 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
 
     var failedVotes = -1
 
-    private var teammates = mutableMapOf<Int, MissionResult>()
+    var teammates = mutableMapOf<Int, MissionResult>()
     private var votes = mutableMapOf<Int, VoteResult>()
 
     init {
@@ -317,6 +318,11 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
      * @return количество миссий, которые выиграли сопротивление
      */
     fun getCountSuccessedMissions(): Int = missions.count { it.missionResult == MissionResult.SUCCESS }
+
+    /**
+     * @return список игроков-не предателей.
+     */
+    fun getNotTraitors(): List<Player> = players.filter { !it.isTraitor() }
 
     //FOR TESTS
     fun getTraitors(): List<Player> = players.filter { it.isTraitor() }

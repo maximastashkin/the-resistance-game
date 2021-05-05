@@ -1,12 +1,7 @@
 package ru.tinkoff.resistance.game
 
 import kotlinx.serialization.Serializable
-
-enum class Role(num: Int) {
-    NONE(-1),
-    RESISTANCE(0),
-    TRAITOR(1)
-}
+import ru.tinkoff.resistance.model.role.Role
 
 @Serializable
 class Player(

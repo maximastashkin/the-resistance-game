@@ -10,7 +10,7 @@ import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.kodein.di.singleton
-import ru.tinkoff.resistance.requests.models.player.PlayerCreateRequest
+import ru.tinkoff.resistance.model.request.PlayerCreateRequest
 
 fun Application.playerModule() {
     val service: PlayerService by closestDI().instance()
