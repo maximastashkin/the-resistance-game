@@ -21,7 +21,7 @@ fun Application.playerModule() {
                 runCatching {
                     service.create(request.apiId, request.name, null)
                 }.onSuccess {
-                    call.respond(it)
+                    call.respond(HttpStatusCode.OK)
                 }.onFailure {
                     call.respond(HttpStatusCode.NotAcceptable)
                 }

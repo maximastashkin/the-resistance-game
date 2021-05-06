@@ -104,7 +104,7 @@ fun Application.gameModule() {
                             HttpStatusCode.MultiStatus,
                             GameResponsesFormer.formTeamingInfoResponse(game, playerService)
                         )
-                        GameState.MISSION -> call.respond(HttpStatusCode.OK, game.teammates.keys.toList())
+                        GameState.MISSION -> call.respond(HttpStatusCode.Accepted, game.teammates.keys.toList())
                         GameState.END -> call.respond(
                             HttpStatusCode.Gone,
                             GameResponsesFormer.formEndGameResponse(game, playerService)
