@@ -17,6 +17,7 @@ import kotlin.random.Random
  * @property missions список миссия с количеством игроков для определенной миссии
  * @property winner роль, которая победила в сессии
  * @property gameState определенное состояние игры
+ * @property onGameStateChanged событие, которое вызывается при изменении свойства GameState
  * @property missionLeader индентификатор лидера текущей миссии
  * @property currentMission номер текущей миссии
  * @property failedVotes количество неудавшихся наборов игроков для миссии
@@ -33,7 +34,12 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
 
     var winner = Role.NONE
 
-    var gameState: GameState = GameState.LOBBY
+    var gameState: GameState by Delegates.observable(GameState.LOBBY) { _, old, new ->
+        onGameStateChanged?.invoke(old, new)
+    }
+
+    @kotlinx.serialization.Transient
+    var onGameStateChanged: ((GameState, GameState) -> Unit)? = null
 
     var missionLeader = -1
     var currentMission = -1
