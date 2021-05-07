@@ -1,4 +1,4 @@
-package ru.rsreu
+package ru.tinkoff.resistance.bot
 
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
@@ -17,6 +17,9 @@ class Buttons {
             InlineKeyboardButton.CallbackData("Success", "voteSuccess"),
             InlineKeyboardButton.CallbackData("Fail", "voteFail"),
         )
+        val START_GAME = InlineKeyboardMarkup.createSingleRowKeyboard(
+            InlineKeyboardButton.CallbackData("start", "start")
+            )
         val TEST_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("voting", "voting"),
             InlineKeyboardButton.CallbackData("mission", "mission"),

@@ -1,4 +1,4 @@
-package ru.rsreu
+package ru.tinkoff.resistance.bot
 
 import com.github.kotlintelegrambot.Bot
 import io.ktor.application.*

@@ -1,4 +1,4 @@
-package ru.rsreu
+package ru.tinkoff.resistance.bot
 
 import io.ktor.serialization.*
 import io.ktor.features.*
