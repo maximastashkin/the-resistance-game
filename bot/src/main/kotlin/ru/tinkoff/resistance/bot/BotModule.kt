@@ -15,11 +15,8 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
-import ru.tinkoff.resistance.model.request.ChoosePlayerForMissionRequest
-import ru.tinkoff.resistance.model.request.JoinGameRequest
-import ru.tinkoff.resistance.model.request.PlayerCreateRequest
-import ru.tinkoff.resistance.model.response.TeamingInfoResponse
-import ru.tinkoff.resistance.model.response.VotingInfoResponse
+import ru.tinkoff.resistance.model.request.*
+import ru.tinkoff.resistance.model.response.InfoResponse
 
 fun botModule(config: AppConfig, client: HttpClient): Bot {
     return bot {
@@ -36,16 +33,16 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
 
             command("start") {
                 runBlocking {
-                    val response = client.post<HttpStatement>(config.server.url + "player") {
+                    val response = client.post<HttpResponse>(config.server.url + "player") {
                         method = HttpMethod.Post
                         contentType(ContentType.Application.Json)
                         body = PlayerCreateRequest(message.chat.id, message.from!!.firstName)
                     }
-                    when (response.execute().status) {
-                        HttpStatusCode.OK -> {
+                    when (response.status) {
+                        HttpStatusCode.Created -> {
                             bot.sendMsg(message.chat.id, "Добро пожаловать!", Buttons.START_BUTTONS)
                         }
-                        HttpStatusCode.NotAcceptable -> {
+                        HttpStatusCode.InternalServerError -> {
                             bot.sendMsg(message.chat.id, "Вы уже зарегистрированы!", Buttons.START_BUTTONS)
                         }
                         else -> {
@@ -57,22 +54,24 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
 
             callbackQuery("create") {
                 val id = callbackQuery.from.id
-                val response: HttpResponse
                 runBlocking {
-                    response = client.get(config.server.url + "game/create/${id}") {
-                        method = HttpMethod.Get
+                    val response = client.post<HttpResponse>(config.server.url + "game/create/${id}") {
+                        method = HttpMethod.Post
                         contentType(ContentType.Application.Json)
+                        body = CreateGameRequest(id)
                     }
                     when (response.status) {
-                        HttpStatusCode.OK -> {
+                        HttpStatusCode.Created -> {
                             var gameId = response.receive<Long>()
                             bot.sendMsg(id, "Игра успешно создана. Номер игры: $gameId", Buttons.START_GAME)
                         }
-                        HttpStatusCode.NotAcceptable -> {
+                        HttpStatusCode.InternalServerError -> {
                             bot.sendMsg(id, "Вы уже в игре")
+                            //CommandErrorCode.ALREADY_IN_GAME
                         }
                         HttpStatusCode.NotFound -> {
                             bot.sendMsg(id, "Вы не найдены в базе")
+                            // chatId
                         }
                         else -> {
                             bot.sendMsg(id, "Что-то пошло не так")
@@ -89,7 +88,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
 
             command("join"){
                 val strings = message.text!!.split(" ")
-                val answer = if(strings.size == 2){
+                if(strings.size == 2){
                     try{
                         val lobbyId = strings[1].toInt()
                         val response: HttpResponse
@@ -102,46 +101,48 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                         }
                         when(response.status){
                             HttpStatusCode.OK -> {
-                                "Вы успешно зашли в игру. Номер игры: $lobbyId"
+                                bot.sendMsg(message.chat.id,"Вы успешно зашли в игру. Номер игры: $lobbyId")
                             }
-                            HttpStatusCode.NotAcceptable -> {
-                                "Вы уже в игре"
+                            HttpStatusCode.InternalServerError -> {
+                                bot.sendMsg(message.chat.id,"Вы уже в игре")
+                                // CommandErrorCode.ALREADY_IN_GAME
                             }
                             HttpStatusCode.NotFound -> {
-                                "Вы не найдены в базе"
+                                bot.sendMsg(message.chat.id,"Вы не найдены в базе")
+                                //telegram id
                             }
-                            else -> "Что-то пошло не так"
+                            else -> bot.sendMsg(message.chat.id,"Что-то пошло не так")
                         }
                     } catch (ex: NumberFormatException){
-                        "Id игры должен быть числом"
+                        bot.sendMsg(message.chat.id,"Id игры должен быть числом")
                     }
                 } else {
-                    "Команда введена не правильно"
+                    bot.sendMsg(message.chat.id,"Команда введена не правильно")
                 }
-                this.bot.sendMsg(message.chat.id, answer)
             }
 
             callbackQuery("start") {
                 val id = callbackQuery.from.id
-                val response: HttpResponse
                 runBlocking {
-                    response = client.get(config.server.url + "game/start/$id") {
+                    val response = client.get<HttpResponse>(config.server.url + "game/start/$id") {
                         method = HttpMethod.Get
                         contentType(ContentType.Application.Json)
                     }
                     when(response.status){
                         HttpStatusCode.OK -> {
                             bot.sendMsg(id, "Игра успешно запущена")
-                            val teamInfo = response.receive<TeamingInfoResponse>()
-                            println(teamInfo)
+                            val teamInfo = response.receive<InfoResponse>()
+                            // Вывод всех игроков всем
+                            // Рисуем кнопки для лидера
+                            // Переходим в тиминг
                             bot.sendMsg(teamInfo.missionLeaderApiId,
                                 "Вы лидер! Выберите 3 игроков в команду",
                                 Buttons.TEAMING_BUTTONS
                                 )
                         }
-                        HttpStatusCode.NotAcceptable -> {
+                        HttpStatusCode.InternalServerError-> {
                             bot.sendMsg(id, "Вы уже в игре")
-                            // CommandErrorCode
+                            // CommandErrorCode очень много
                         }
                         HttpStatusCode.NotFound -> {
                             bot.sendMsg(id, "Вы не найдены в базе")
@@ -164,9 +165,8 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                 if(strings.size == 2){
                     try{
                         val playerId = strings[1].toLong()
-                        val response: HttpResponse
                         runBlocking {
-                            response = client.post(config.server.url + "game/chooseplayerformission") {
+                            val response = client.post<HttpResponse>(config.server.url + "game/chooseplayerformission") {
                                 method = HttpMethod.Post
                                 contentType(ContentType.Application.Json)
                                 body = ChoosePlayerForMissionRequest(message.from!!.id, playerId)
@@ -174,50 +174,64 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                             when(response.status){
                                 HttpStatusCode.OK -> {
                                     bot.sendMsg(message.chat.id, "Игрок успешного выбран")
-                                }
-                                HttpStatusCode.MultiStatus -> {
-                                    val votingInfo = response.receive<VotingInfoResponse>()
-                                    val team: String = ""
-                                    votingInfo.playersApiIds.forEach{
-                                        bot.sendMsg(it,
-                                            "Команда сформирована из $team. Ваше мнение?",
-                                            Buttons.VOTING_BUTTONS)
-                                    }
-
-                                }
-                                HttpStatusCode.NotAcceptable -> {
-                                    bot.sendMsg(message.chat.id, "Вы уже в игре")
+                                    // Проверить статус игры и если все проголосовали перейти в миссию или голосование
                                 }
                                 HttpStatusCode.NotFound -> {
-                                    bot.sendMsg(message.chat.id, "Вы не найдены в базе")
+                                    bot.sendMsg(message.chat.id, "Игрок не найден в базе")
+                                    // Ид
                                 }
-                                else -> "Что-то пошло не так"
+                                HttpStatusCode.InternalServerError-> {
+                                    bot.sendMsg(message.chat.id, "Ошибочка")
+                                    // CommandError
+                                }
+                                else -> bot.sendMsg(message.chat.id,"Что-то пошло не так")
                             }
                         }
                     } catch (ex: NumberFormatException){
-                        "Id игрока должен быть числом"
+                        bot.sendMsg(message.chat.id,"Id игрока должен быть числом")
                     }
                 } else {
-                    "Команда введена не правильно"
+                    bot.sendMsg(message.chat.id,"Команда введена не правильно")
                 }
             }
 
-
-            callbackQuery("voting") {
-                this.bot.sendMsg(callbackQuery.from.id,
-                    "Do you agree with such a team: ....",
-                    Buttons.VOTING_BUTTONS
-                )
-                this.bot.deleteMsg(callbackQuery)
-            }
-
             callbackQuery("voteYes") {
-                this.bot.sendMsg(callbackQuery.from.id, "YES")
+                val id = callbackQuery.from.id
+                runBlocking {
+                    val response = client.post<HttpResponse>(config.server.url + "game/voteforteam"){
+                        method = HttpMethod.Post
+                        contentType(ContentType.Application.Json)
+                        body = VoteForTeamRequest(id, true)
+                    }
+                    when(response.status){
+                        HttpStatusCode.OK -> {
+                            // InfoResponce
+                        }
+                        HttpStatusCode.InternalServerError -> {
+                            // Обработка ошибки
+                        }
+                    }
+                }
                 bot.deleteMsg(callbackQuery)
             }
 
             callbackQuery("voteNo") {
-                this.bot.sendMsg(callbackQuery.from.id, "NO")
+                val id = callbackQuery.from.id
+                runBlocking {
+                    val response = client.post<HttpResponse>(config.server.url + "game/voteforteam"){
+                        method = HttpMethod.Post
+                        contentType(ContentType.Application.Json)
+                        body = VoteForTeamRequest(id, false)
+                    }
+                    when(response.status){
+                        HttpStatusCode.OK -> {
+                            // InfoResponce
+                        }
+                        HttpStatusCode.InternalServerError -> {
+                            // Обработка ошибки
+                        }
+                    }
+                }
                 bot.deleteMsg(callbackQuery)
             }
 
@@ -227,12 +241,42 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
             }
 
             callbackQuery("voteSuccess") {
-                this.bot.sendMsg(callbackQuery.from.id, text = "SUCCESS")
+                val id = callbackQuery.from.id
+                runBlocking {
+                    val response = client.post<HttpResponse>(config.server.url + "game/voteforteam"){
+                        method = HttpMethod.Post
+                        contentType(ContentType.Application.Json)
+                        body = MissionActionRequest(id, true)
+                    }
+                    when(response.status){
+                        HttpStatusCode.OK -> {
+                            // InfoResponce
+                        }
+                        HttpStatusCode.InternalServerError -> {
+                            // Обработка ошибки
+                        }
+                    }
+                }
                 bot.deleteMsg(callbackQuery)
             }
 
             callbackQuery("voteFail") {
-                this.bot.sendMsg(callbackQuery.from.id, text = "FAIL")
+                val id = callbackQuery.from.id
+                runBlocking {
+                    val response = client.post<HttpResponse>(config.server.url + "game/voteforteam"){
+                        method = HttpMethod.Post
+                        contentType(ContentType.Application.Json)
+                        body = MissionActionRequest(id, false)
+                    }
+                    when(response.status){
+                        HttpStatusCode.OK -> {
+                            // InfoResponce
+                        }
+                        HttpStatusCode.InternalServerError -> {
+                            // Обработка ошибки
+                        }
+                    }
+                }
                 bot.deleteMsg(callbackQuery)
             }
         }
