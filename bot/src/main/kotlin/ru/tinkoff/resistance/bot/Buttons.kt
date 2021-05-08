@@ -6,20 +6,23 @@ import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
 class Buttons {
     companion object {
         val START_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
-            InlineKeyboardButton.CallbackData("Create", "create"),
-            InlineKeyboardButton.CallbackData("Join", "join"),
+            InlineKeyboardButton.CallbackData("Создать", "create"),
+            InlineKeyboardButton.CallbackData("Войти", "join"),
         )
         val VOTING_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
-            InlineKeyboardButton.CallbackData("Yes", "voteYes"),
-            InlineKeyboardButton.CallbackData("No", "voteNo"),
+            InlineKeyboardButton.CallbackData("За", "voteYes"),
+            InlineKeyboardButton.CallbackData("Против", "voteNo"),
         )
         val MISSION_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
-            InlineKeyboardButton.CallbackData("Success", "voteSuccess"),
-            InlineKeyboardButton.CallbackData("Fail", "voteFail"),
+            InlineKeyboardButton.CallbackData("Успех", "voteSuccess"),
+            InlineKeyboardButton.CallbackData("Фейл", "voteFail"),
         )
         val START_GAME = InlineKeyboardMarkup.createSingleRowKeyboard(
-            InlineKeyboardButton.CallbackData("start", "start")
+            InlineKeyboardButton.CallbackData("Начать игру", "start")
             )
+        val TEAMING_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
+            InlineKeyboardButton.CallbackData("Набрать команду", "teaming")
+        )
         val TEST_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("voting", "voting"),
             InlineKeyboardButton.CallbackData("mission", "mission"),
