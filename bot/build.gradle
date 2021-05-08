@@ -24,8 +24,6 @@ dependencies {
 
     implementation "io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram:$telegram_api_version"
 
-    implementation(project(":shared-models"))
-
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
 
 }
