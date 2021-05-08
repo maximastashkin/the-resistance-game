@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import ru.tinkoff.resistance.model.role.Role
+import kotlin.properties.Delegates
 import kotlin.random.Random
 
 /**

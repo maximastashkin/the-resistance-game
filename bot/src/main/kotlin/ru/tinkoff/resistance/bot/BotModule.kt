@@ -10,10 +10,16 @@ import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.ReplyMarkup
 import com.github.kotlintelegrambot.webhook
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import ru.tinkoff.resistance.model.request.ChoosePlayerForMissionRequest
+import ru.tinkoff.resistance.model.request.JoinGameRequest
+import ru.tinkoff.resistance.model.request.PlayerCreateRequest
+import ru.tinkoff.resistance.model.response.TeamingInfoResponse
+import ru.tinkoff.resistance.model.response.VotingInfoResponse
 
 fun botModule(config: AppConfig, client: HttpClient): Bot {
     return bot {
@@ -29,18 +35,23 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
             }
 
             command("start") {
-                val response: HttpResponse
                 runBlocking {
-                    response = client.post(config.server.url + "player") {
+                    val response = client.post<HttpStatement>(config.server.url + "player") {
                         method = HttpMethod.Post
                         contentType(ContentType.Application.Json)
-//                        body = PlayerCreateRequest(message.chat.id, message.from!!.firstName)
+                        body = PlayerCreateRequest(message.chat.id, message.from!!.firstName)
                     }
-                }
-                if(response.status == HttpStatusCode.OK){
-                    bot.sendMsg(message.chat.id, "Добро пожаловать!", Buttons.START_BUTTONS)
-                } else {
-                    bot.sendMsg(message.chat.id, "Repeat? /start")
+                    when (response.execute().status) {
+                        HttpStatusCode.OK -> {
+                            bot.sendMsg(message.chat.id, "Добро пожаловать!", Buttons.START_BUTTONS)
+                        }
+                        HttpStatusCode.NotAcceptable -> {
+                            bot.sendMsg(message.chat.id, "Вы уже зарегистрированы!", Buttons.START_BUTTONS)
+                        }
+                        else -> {
+                            bot.sendMsg(message.chat.id, "Что-то пошло не так")
+                        }
+                    }
                 }
             }
 
@@ -52,19 +63,20 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                         method = HttpMethod.Get
                         contentType(ContentType.Application.Json)
                     }
-                }
-                when (response.status) {
-                    HttpStatusCode.OK -> {
-                        this.bot.sendMsg(id, "Игра успешно создана. id = ${response.content}", Buttons.START_GAME)
-                    }
-                    HttpStatusCode.NotAcceptable -> {
-                        this.bot.sendMsg(id, "Вы уже в игре")
-                    }
-                    HttpStatusCode.NotFound -> {
-                        this.bot.sendMsg(id, "Вы не найдены в базе")
-                    }
-                    else -> {
-                        this.bot.sendMsg(id, "Что-то пошло не так")
+                    when (response.status) {
+                        HttpStatusCode.OK -> {
+                            var gameId = response.receive<Long>()
+                            bot.sendMsg(id, "Игра успешно создана. Номер игры: $gameId", Buttons.START_GAME)
+                        }
+                        HttpStatusCode.NotAcceptable -> {
+                            bot.sendMsg(id, "Вы уже в игре")
+                        }
+                        HttpStatusCode.NotFound -> {
+                            bot.sendMsg(id, "Вы не найдены в базе")
+                        }
+                        else -> {
+                            bot.sendMsg(id, "Что-то пошло не так")
+                        }
                     }
                 }
                 bot.deleteMsg(callbackQuery)
@@ -85,12 +97,12 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                             response = client.post(config.server.url + "game/join") {
                                 method = HttpMethod.Post
                                 contentType(ContentType.Application.Json)
-//                                body = JoinGameRequest(message.chat.id, lobbyId)
+                                body = JoinGameRequest(message.chat.id, lobbyId)
                             }
                         }
                         when(response.status){
                             HttpStatusCode.OK -> {
-                                "Вы успешно зашли в игру"
+                                "Вы успешно зашли в игру. Номер игры: $lobbyId"
                             }
                             HttpStatusCode.NotAcceptable -> {
                                 "Вы уже в игре"
@@ -101,7 +113,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                             else -> "Что-то пошло не так"
                         }
                     } catch (ex: NumberFormatException){
-                        "Id игры должно быть числом"
+                        "Id игры должен быть числом"
                     }
                 } else {
                     "Команда введена не правильно"
@@ -117,37 +129,77 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                         method = HttpMethod.Get
                         contentType(ContentType.Application.Json)
                     }
-                }
-                when(response.status){
-                    HttpStatusCode.OK -> {
-                        this.bot.sendMsg(id, "Игра успешно запущена")
-                        // TeamingInfoResponse
-                    }
-                    HttpStatusCode.NotAcceptable -> {
-                        this.bot.sendMsg(id, "Вы уже в игре")
-                        // CommandErrorCode
-                    }
-                    HttpStatusCode.NotFound -> {
-                        this.bot.sendMsg(id, "Вы не найдены в базе")
-                    }
-                    else -> {
-                        this.bot.sendMsg(id, "Что-то пошло не так")
+                    when(response.status){
+                        HttpStatusCode.OK -> {
+                            bot.sendMsg(id, "Игра успешно запущена")
+                            val teamInfo = response.receive<TeamingInfoResponse>()
+                            println(teamInfo)
+                            bot.sendMsg(teamInfo.missionLeaderApiId,
+                                "Вы лидер! Выберите 3 игроков в команду",
+                                Buttons.TEAMING_BUTTONS
+                                )
+                        }
+                        HttpStatusCode.NotAcceptable -> {
+                            bot.sendMsg(id, "Вы уже в игре")
+                            // CommandErrorCode
+                        }
+                        HttpStatusCode.NotFound -> {
+                            bot.sendMsg(id, "Вы не найдены в базе")
+                        }
+                        else -> {
+                            bot.sendMsg(id, "Что-то пошло не так")
+                        }
                     }
                 }
                 bot.deleteMsg(callbackQuery)
             }
 
             callbackQuery("teaming"){
-//                val response: HttpResponse
-//                runBlocking {
-//                    response = client.post(config.server.url + "game/chooseplayerformission") {
-//                        method = HttpMethod.Post
-//                        contentType(ContentType.Application.Json)
-//                        body = ChoosePlayerForMissionRequest(callbackQuery.from.id, 0)
-//                    }
-//                }
-                this.bot.sendMsg(callbackQuery.from.id, "You are captain! Select team")
+                bot.sendMsg(callbackQuery.from.id, "Чтобы выбрать игрока /invite id")
                 bot.deleteMsg(callbackQuery)
+            }
+
+            command("invite"){
+                val strings = message.text!!.split(" ")
+                if(strings.size == 2){
+                    try{
+                        val playerId = strings[1].toLong()
+                        val response: HttpResponse
+                        runBlocking {
+                            response = client.post(config.server.url + "game/chooseplayerformission") {
+                                method = HttpMethod.Post
+                                contentType(ContentType.Application.Json)
+                                body = ChoosePlayerForMissionRequest(message.from!!.id, playerId)
+                            }
+                            when(response.status){
+                                HttpStatusCode.OK -> {
+                                    bot.sendMsg(message.chat.id, "Игрок успешного выбран")
+                                }
+                                HttpStatusCode.MultiStatus -> {
+                                    val votingInfo = response.receive<VotingInfoResponse>()
+                                    val team: String = ""
+                                    votingInfo.playersApiIds.forEach{
+                                        bot.sendMsg(it,
+                                            "Команда сформирована из $team. Ваше мнение?",
+                                            Buttons.VOTING_BUTTONS)
+                                    }
+
+                                }
+                                HttpStatusCode.NotAcceptable -> {
+                                    bot.sendMsg(message.chat.id, "Вы уже в игре")
+                                }
+                                HttpStatusCode.NotFound -> {
+                                    bot.sendMsg(message.chat.id, "Вы не найдены в базе")
+                                }
+                                else -> "Что-то пошло не так"
+                            }
+                        }
+                    } catch (ex: NumberFormatException){
+                        "Id игрока должен быть числом"
+                    }
+                } else {
+                    "Команда введена не правильно"
+                }
             }
 
 
