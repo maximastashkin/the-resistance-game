@@ -4,8 +4,8 @@ import ru.tinkoff.resistance.game.commands.StartGameCommand
 import ru.tinkoff.resistance.game.commands.VoteForTeamCommand
 import org.junit.jupiter.api.Test
 import ru.tinkoff.resistance.game.Game
-import ru.tinkoff.resistance.game.GameState
-import ru.tinkoff.resistance.model.role.Role
+import ru.tinkoff.resistance.model.game.GameState
+import ru.tinkoff.resistance.model.game.Role
 
 class TestFailedChoiceMissionLeader {
 

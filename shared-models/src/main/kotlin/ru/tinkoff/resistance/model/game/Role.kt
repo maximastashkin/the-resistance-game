@@ -1,4 +1,4 @@
-package ru.tinkoff.resistance.model.role
+package ru.tinkoff.resistance.model.game
 
 enum class Role(num: Int) {
     NONE(-1),

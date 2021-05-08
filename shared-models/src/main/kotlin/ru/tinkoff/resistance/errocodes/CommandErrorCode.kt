@@ -15,4 +15,6 @@ enum class CommandErrorCode(num: Int) {
     DO_MISSION_IN_NOT_MISSION_STATE(11),
     PLAYER_DONT_DO_MISSION(12),
     ALREADY_DONE_MISSION(13),
+    GAME_NOT_FOUND(0),
+    PLAYER_NOT_IN_GAME(1)
 }

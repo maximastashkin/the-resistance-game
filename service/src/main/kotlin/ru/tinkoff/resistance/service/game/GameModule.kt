@@ -5,44 +5,41 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import io.ktor.util.pipeline.*
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.kodein.di.singleton
+import ru.tinkoff.resistance.errocodes.CommandErrorCode
 import ru.tinkoff.resistance.game.Game
-import ru.tinkoff.resistance.game.GameState
 import ru.tinkoff.resistance.game.commands.*
-import ru.tinkoff.resistance.model.request.ChoosePlayerForMissionRequest
-import ru.tinkoff.resistance.model.request.JoinGameRequest
-import ru.tinkoff.resistance.model.request.MissionActionRequest
-import ru.tinkoff.resistance.model.request.VoteForTeamRequest
-import ru.tinkoff.resistance.model.response.BasicInfoResponse
-import ru.tinkoff.resistance.model.response.TeamingInfoResponse
+import ru.tinkoff.resistance.model.game.GameState
+import ru.tinkoff.resistance.model.request.*
 import ru.tinkoff.resistance.service.game.controller.GameController
+import ru.tinkoff.resistance.service.game.history.GamesHistoryDao
+import ru.tinkoff.resistance.service.game.history.GamesHistoryService
 import ru.tinkoff.resistance.service.player.PlayerService
+import java.time.LocalDateTime
 
 fun Application.gameModule() {
     val service: GameService by closestDI().instance()
     val controller: GameController by closestDI().instance()
     val playerService: PlayerService by closestDI().instance()
+    val gamesHistoryService: GamesHistoryService by closestDI().instance()
     routing {
-        route("/game/create/{hostApiId}") {
-            get {
-                val apiId = call.parameters["hostApiId"]?.toLong()
-                if (apiId != null) {
-                    with(playerService.findByApiId(apiId)) {
-                        if (!isActive()) {
-                            val createdGame = service.create(id, name)
-                            controller.addGameToActive(createdGame)
-                            playerService.update(id, apiId, name, createdGame.id)
-                            call.respond(HttpStatusCode.OK, createdGame.id)
-                        } else {
-                            call.respond(HttpStatusCode.NotAcceptable)
-                        }
+        route("/game/create") {
+            post {
+                val apiId = call.receive<CreateGameRequest>().hostApiId
+                with(playerService.findByApiId(apiId)) {
+                    if (!isActive()) {
+                        val createdGame = service.create(id, name, LocalDateTime.now(), 0)
+                        controller.addGameToActive(createdGame)
+                        playerService.update(id, apiId, name, createdGame.id)
+                        call.respond(HttpStatusCode.Created, createdGame.id)
+                    } else {
+                        call.respond(HttpStatusCode.InternalServerError, CommandErrorCode.ALREADY_IN_GAME)
                     }
-                } else {
-                    call.respond(HttpStatusCode.BadRequest)
                 }
             }
         }
@@ -62,11 +59,12 @@ fun Application.gameModule() {
                 if (apiId != null) {
                     with(playerService.findByApiId(apiId)) {
                         val game = controller.getGameById(currentGameId ?: -1)
-                        game.executeCommand(StartGameCommand(id, name))
-                        call.respond(
-                            HttpStatusCode.OK,
-                            GameResponsesFormer.formTeamingInfoResponse(game, playerService)
-                        )
+                        respondFormingResponse(game, playerService, StartGameCommand(id, name))
+                        game.players.map {
+                            it.id
+                        }.forEach {
+                            gamesHistoryService.create(it, game.id)
+                        }
                     }
                 } else {
                     // Плохой запрос
@@ -80,15 +78,7 @@ fun Application.gameModule() {
                 with(playerService.findByApiId(request.leaderApiId)) {
                     val candidate = playerService.findByApiId(request.candidateApiId)
                     val game = controller.getGameById(currentGameId ?: -1)
-                    game.executeCommand(ChoosePlayerForMissionCommand(id, name, candidate.id))
-                    if (game.gameState == GameState.VOTING) {
-                        call.respond(
-                            HttpStatusCode.MultiStatus,
-                            GameResponsesFormer.formVotingInfoResponse(game, playerService)
-                        )
-                    } else {
-                        call.respond(HttpStatusCode.OK)
-                    }
+                    respondFormingResponse(game, playerService, ChoosePlayerForMissionCommand(id, name, candidate.id))
                 }
             }
         }
@@ -97,20 +87,12 @@ fun Application.gameModule() {
                 val request = call.receive<VoteForTeamRequest>()
                 with(playerService.findByApiId(request.apiId)) {
                     val game = controller.getGameById(currentGameId ?: -1)
-                    game.executeCommand(VoteForTeamCommand(id, name, request.agreement))
-                    val basicInfoResponse = GameResponsesFormer.formBasicInfoResponse(game, playerService)
-                    when (game.gameState) {
-                        GameState.TEAMING -> call.respond(
-                            HttpStatusCode.MultiStatus,
-                            GameResponsesFormer.formTeamingInfoResponse(game, playerService)
-                        )
-                        GameState.MISSION -> call.respond(HttpStatusCode.Accepted, game.teammates.keys.toList())
-                        GameState.END -> call.respond(
-                            HttpStatusCode.Gone,
-                            GameResponsesFormer.formEndGameResponse(game, playerService)
-                        )
-                        else -> call.respond(HttpStatusCode.OK)
+                    game.onGameStateChanged = {_, new ->
+                        if (new == GameState.END) {
+                            service.update(game.id, game.winner.ordinal)
+                        }
                     }
+                    respondFormingResponse(game, playerService, VoteForTeamCommand(id, name, request.agreement))
                 }
             }
         }
@@ -119,27 +101,31 @@ fun Application.gameModule() {
                 val request = call.receive<MissionActionRequest>()
                 with(playerService.findByApiId(request.apiId)) {
                     val game = controller.getGameById(currentGameId ?: -1)
-                    game.executeCommand(MissionActionCommand(id, name, request.action))
-                    when (game.gameState) {
-                        GameState.TEAMING -> call.respond(
-                            HttpStatusCode.MultiStatus,
-                            GameResponsesFormer.formTeamingInfoResponse(game, playerService)
-                        )
-                        GameState.END -> call.respond(
-                            HttpStatusCode.Gone,
-                            GameResponsesFormer.formEndGameResponse(game, playerService)
-                        )
-                        else -> call.respond(HttpStatusCode.OK)
+                    game.onGameStateChanged = {_, new ->
+                        if (new == GameState.END) {
+                            service.update(game.id, game.winner.ordinal)
+                        }
                     }
+                    respondFormingResponse(game, playerService, MissionActionCommand(id, name, request.action))
                 }
             }
         }
     }
 }
 
+private suspend fun PipelineContext<Unit, ApplicationCall>.respondFormingResponse(
+    game: Game,
+    playerService: PlayerService,
+    command: Command
+) {
+    game.executeCommand(command)
+    call.respond(HttpStatusCode.OK, GameResponsesFormer.formInfoResponse(game, playerService))
+}
 
 fun DI.Builder.gameComponents() {
     bind<GameDao>() with singleton { GameDao(instance()) }
     bind<GameService>() with singleton { GameService(instance(), instance()) }
     bind<GameController>() with singleton { GameController() }
+    bind<GamesHistoryDao>() with singleton { GamesHistoryDao(instance()) }
+    bind<GamesHistoryService>() with singleton { GamesHistoryService(instance(), instance()) }
 }

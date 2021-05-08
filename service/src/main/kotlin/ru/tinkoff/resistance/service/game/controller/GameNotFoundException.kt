@@ -1,5 +1,5 @@
 package ru.tinkoff.resistance.service.game.controller
 
-import ru.tinkoff.resistance.errocodes.GameErrorCode
+import ru.tinkoff.resistance.errocodes.CommandErrorCode
 
-class GameNotFoundException(override val message: String, val errorCode: GameErrorCode) : Exception(message)
+class GameNotFoundException(override val message: String, val errorCode: CommandErrorCode) : Exception(message)

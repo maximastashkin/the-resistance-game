@@ -1,7 +1,7 @@
 package ru.tinkoff.resistance.game
 
 import kotlinx.serialization.Serializable
-import ru.tinkoff.resistance.model.role.Role
+import ru.tinkoff.resistance.model.game.Role
 
 @Serializable
 class Player(
