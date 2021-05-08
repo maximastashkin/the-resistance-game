@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Test
 import ru.tinkoff.resistance.game.Game
-import ru.tinkoff.resistance.game.GameState
+import ru.tinkoff.resistance.model.game.GameState
 import ru.tinkoff.resistance.game.commands.JoinGameCommand
 import ru.tinkoff.resistance.game.commands.StartGameCommand
 

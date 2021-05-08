@@ -11,10 +11,10 @@ import ru.tinkoff.resistance.service.player.PlayerNotFoundException
 fun Application.configureExceptionHandler() {
     install(StatusPages) {
         exception<GameNotFoundException> {
-            call.respond(HttpStatusCode.NotAcceptable, it.errorCode)
+            call.respond(HttpStatusCode.InternalServerError, it.errorCode)
         }
         exception<CommandExecutionException> {
-            call.respond(HttpStatusCode.NotAcceptable, it.errorCode)
+            call.respond(HttpStatusCode.InternalServerError, it.errorCode)
         }
         exception<PlayerNotFoundException> {
             call.respond(HttpStatusCode.NotFound, it.apiId)

@@ -1,5 +1,8 @@
 CREATE TABLE games(
-    id SERIAL PRIMARY KEY
+    id SERIAL PRIMARY KEY,
+    host_id integer,
+    date_time timestamp,
+    winner integer
 );
 
 CREATE TABLE players(
@@ -8,3 +11,8 @@ CREATE TABLE players(
     api_id bigint unique,
     current_game_id integer,
     FOREIGN KEY(current_game_id) REFERENCES games(id));
+
+CREATE TABLE gameshistory(
+    player_id integer,
+    game_id integer
+)

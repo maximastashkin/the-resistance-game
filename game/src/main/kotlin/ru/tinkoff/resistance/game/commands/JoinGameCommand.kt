@@ -3,7 +3,7 @@ package ru.tinkoff.resistance.game.commands
 import ru.tinkoff.resistance.errocodes.CommandErrorCode
 import ru.tinkoff.resistance.game.Game
 import ru.tinkoff.resistance.game.GameConfiguration
-import ru.tinkoff.resistance.game.GameState
+import ru.tinkoff.resistance.model.game.GameState
 
 /**
  * Команда для подключения к сессии
