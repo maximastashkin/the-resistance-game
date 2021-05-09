@@ -6,9 +6,9 @@ import ru.tinkoff.resistance.model.game.GameState
 @Serializable
 data class InfoResponse(
     val gameState: GameState,
-    val notTraitorsApiIds: List<Long>,
-    val traitorsApiIds: List<Long>,
-    val teammatesApiIds: List<Long>,
+    val notTraitors: List<Pair<Long, String>>,
+    val traitors: List<Pair<Long, String>>,
+    val teammates: List<Pair<Long, String>>,
     val countFailedMissions: Int, val countSuccessedMissions: Int,
-    val missionLeaderApiId: Long,
+    val missionLeader: Pair<Long, String>,
 )

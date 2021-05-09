@@ -297,5 +297,3 @@ fun Bot.sendMsg(chatId: Long, text: String, replyMarkup: ReplyMarkup? = null){
         replyMarkup = replyMarkup
     )
 }
-
-

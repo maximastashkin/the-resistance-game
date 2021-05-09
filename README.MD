@@ -23,21 +23,42 @@
 ```
     {
         "gameState": "TEAMING",
-        "notTraitorsApiIds": [
-            2,
-            3,
-            4
+        "notTraitors": [
+            {
+                "first": 1,
+                "second": "test"
+            },
+            {
+                "first": 3,
+                "second": "test"
+            },
+            {
+                "first": 4,
+                "second": "test"
+            }
         ],
-        "traitorsApiIds": [
-            1,
-            5
+        "traitors": [
+            {
+                "first": 2,
+                "second": "test"
+            },
+            {
+                "first": 5,
+                "second": "test"
+            }
         ],
-        "teammatesApiIds": [
-            2
+        "teammates": [
+            {
+                "first": 5,
+                "second": "test"
+            }
         ],
         "countFailedMissions": 0,
         "countSuccessedMissions": 0,
-        "missionLeaderApiId": 2
+        "missionLeader": {
+            "first": 5,
+            "second": "test"
+        }
     }
 ```
 * **BadRequest(400)** - Неправильный запрос;
