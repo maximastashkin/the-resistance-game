@@ -135,7 +135,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                             // Вывод всех игроков всем
                             // Рисуем кнопки для лидера
                             // Переходим в тиминг
-                            bot.sendMsg(teamInfo.missionLeaderApiId,
+                            bot.sendMsg(teamInfo.missionLeader.first,
                                 "Вы лидер! Выберите 3 игроков в команду",
                                 Buttons.TEAMING_BUTTONS
                                 )
