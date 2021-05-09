@@ -13,6 +13,7 @@ fun main() {
     val config = ConfigFactory.load().extract<AppConfig>()
     val client = HttpClient(CIO) {
         install(JsonFeature)
+        expectSuccess = false
     }
     val engine = embeddedServer(Netty, port = config.http.port) {
         configureSerialization()
