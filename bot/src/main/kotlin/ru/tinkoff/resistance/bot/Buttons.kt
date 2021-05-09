@@ -30,5 +30,15 @@ class Buttons {
             InlineKeyboardButton.CallbackData("teaming", "teaming"),
         )
 
+        fun getTeamingButtons(traitors: List<Pair<Long, String>>, notTraitors: List<Pair<Long, String>>,): InlineKeyboardMarkup {
+            val buttons = arrayListOf<List<InlineKeyboardButton>>()
+            traitors.forEach{
+                buttons.add(listOf(InlineKeyboardButton.CallbackData(it.second, "invite ${it.first}")))
+            }
+            notTraitors.forEach{
+                buttons.add(listOf(InlineKeyboardButton.CallbackData(it.second, "invite ${it.first}")))
+            }
+            return InlineKeyboardMarkup.create(buttons)
+        }
     }
 }
