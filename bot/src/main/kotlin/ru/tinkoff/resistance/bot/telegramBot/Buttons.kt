@@ -1,4 +1,4 @@
-package ru.tinkoff.resistance.bot
+package ru.tinkoff.resistance.bot.telegramBot
 
 import com.github.kotlintelegrambot.entities.InlineKeyboardMarkup
 import com.github.kotlintelegrambot.entities.keyboard.InlineKeyboardButton
@@ -20,15 +20,13 @@ class Buttons {
         val START_GAME = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("Начать игру", "start")
             )
-        val TEAMING_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
-            InlineKeyboardButton.CallbackData("Набрать команду", "teaming")
-        )
-        val TEST_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
-            InlineKeyboardButton.CallbackData("voting", "voting"),
-            InlineKeyboardButton.CallbackData("mission", "mission"),
-            InlineKeyboardButton.CallbackData("start", "start"),
-            InlineKeyboardButton.CallbackData("teaming", "teaming"),
-        )
 
+        fun getTeamingButtons(players: List<Pair<Long, String>>): InlineKeyboardMarkup {
+            val buttons = arrayListOf<List<InlineKeyboardButton>>()
+            players.forEach{
+                buttons.add(listOf(InlineKeyboardButton.CallbackData(it.second, "invite ${it.first}")))
+            }
+            return InlineKeyboardMarkup.create(buttons)
+        }
     }
 }
