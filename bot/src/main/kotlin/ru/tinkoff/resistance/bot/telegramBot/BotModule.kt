@@ -5,9 +5,6 @@ import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.callbackQuery
 import com.github.kotlintelegrambot.dispatcher.command
-import com.github.kotlintelegrambot.entities.CallbackQuery
-import com.github.kotlintelegrambot.entities.ChatId
-import com.github.kotlintelegrambot.entities.ReplyMarkup
 import com.github.kotlintelegrambot.webhook
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -62,7 +59,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                         HttpStatusCode.Created -> {
                             val gameId = response.receive<Long>()
                             bot.sendMsg(id, "Игра успешно создана. Номер игры: $gameId", Buttons.START_GAME)
-                            bot.deleteMsg(callbackQuery)
+                            bot.deleteLastMsg(callbackQuery)
                         }
                         HttpStatusCode.InternalServerError -> {
                             val commandErrorCode = response.receive<CommandErrorCode>()
@@ -80,7 +77,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
 
             callbackQuery("join") {
                 this.bot.sendMsg(callbackQuery.from.id, "Введите id игры /join id")
-                bot.deleteMsg(callbackQuery)
+                bot.deleteLastMsg(callbackQuery)
             }
 
             command("join") {
@@ -127,7 +124,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                     when (response.status) {
                         HttpStatusCode.OK -> {
                             bot.sendMsg(id, "Игра успешно запущена")
-                            bot.deleteMsg(callbackQuery)
+                            bot.deleteLastMsg(callbackQuery)
                             val infoResponse = response.receive<InfoResponse>()
                             bot.startGame(infoResponse)
 
@@ -160,7 +157,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                         HttpStatusCode.OK -> {
                             val infoResponse = response.receive<InfoResponse>()
                             bot.choosePlayer(infoResponse)
-                            bot.deleteMsg(callbackQuery)
+                            bot.deleteLastMsg(callbackQuery)
                         }
                         HttpStatusCode.NotFound -> {
                             bot.sendMsg(id, "Игрок не найден в базе")
@@ -174,19 +171,20 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                 }
             }
 
-            callbackQuery("voteYes") {
+            callbackQuery("vote") {
+                val answer = callbackQuery.data == "voteYes"
                 val id = callbackQuery.from.id
                 runBlocking {
                     val response = client.post<HttpResponse>(config.server.url + "game/voteforteam") {
                         method = HttpMethod.Post
                         contentType(ContentType.Application.Json)
-                        body = VoteForTeamRequest(id, true)
+                        body = VoteForTeamRequest(id, answer)
                     }
                     when (response.status) {
                         HttpStatusCode.OK -> {
                             val infoResponse = response.receive<InfoResponse>()
                             bot.voteForTeam(infoResponse)
-                            bot.deleteMsg(callbackQuery)
+                            bot.deleteLastMsg(callbackQuery)
                         }
                         HttpStatusCode.InternalServerError -> {
                             val commandErrorCode = response.receive<CommandErrorCode>()
@@ -196,68 +194,23 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
 
                     }
                 }
-                bot.deleteMsg(callbackQuery)
+                bot.deleteLastMsg(callbackQuery)
             }
 
-            callbackQuery("voteNo") {
-                val id = callbackQuery.from.id
-                runBlocking {
-                    val response = client.post<HttpResponse>(config.server.url + "game/voteforteam") {
-                        method = HttpMethod.Post
-                        contentType(ContentType.Application.Json)
-                        body = VoteForTeamRequest(id, false)
-                    }
-                    when (response.status) {
-                        HttpStatusCode.OK -> {
-                            val infoResponse = response.receive<InfoResponse>()
-                            bot.voteForTeam(infoResponse)
-                            bot.deleteMsg(callbackQuery)
-                        }
-                        HttpStatusCode.InternalServerError -> {
-                            val commandErrorCode = response.receive<CommandErrorCode>()
-                            bot.sendMsg(id, commandErrorCode.getMessage())
-                        }
-                        else -> bot.sendMsg(id, "Что-то пошло не так")
-                    }
-                }
-            }
-
-            callbackQuery("voteSuccess") {
+            callbackQuery("mission") {
+                val answer = callbackQuery.data == "missionSuccess"
                 val id = callbackQuery.from.id
                 runBlocking {
                     val response = client.post<HttpResponse>(config.server.url + "game/missionaction") {
                         method = HttpMethod.Post
                         contentType(ContentType.Application.Json)
-                        body = MissionActionRequest(id, true)
+                        body = MissionActionRequest(id, answer)
                     }
                     when (response.status) {
                         HttpStatusCode.OK -> {
                             val infoResponse = response.receive<InfoResponse>()
                             bot.mission(infoResponse)
-                            bot.deleteMsg(callbackQuery)
-                        }
-                        HttpStatusCode.InternalServerError -> {
-                            val commandErrorCode = response.receive<CommandErrorCode>()
-                            bot.sendMsg(id, commandErrorCode.getMessage())
-                        }
-                        else -> bot.sendMsg(id, "Что-то пошло не так")
-                    }
-                }
-            }
-
-            callbackQuery("voteFail") {
-                val id = callbackQuery.from.id
-                runBlocking {
-                    val response = client.post<HttpResponse>(config.server.url + "game/missionaction") {
-                        method = HttpMethod.Post
-                        contentType(ContentType.Application.Json)
-                        body = MissionActionRequest(id, false)
-                    }
-                    when (response.status) {
-                        HttpStatusCode.OK -> {
-                            val infoResponse = response.receive<InfoResponse>()
-                            bot.mission(infoResponse)
-                            bot.deleteMsg(callbackQuery)
+                            bot.deleteLastMsg(callbackQuery)
                         }
                         HttpStatusCode.InternalServerError -> {
                             val commandErrorCode = response.receive<CommandErrorCode>()
@@ -269,19 +222,4 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
             }
         }
     }
-}
-
-fun Bot.deleteMsg(callbackQuery: CallbackQuery) {
-    this.deleteMessage(
-        chatId = ChatId.fromId(callbackQuery.from.id),
-        messageId = callbackQuery.message!!.messageId
-    )
-}
-
-fun Bot.sendMsg(chatId: Long, text: String, replyMarkup: ReplyMarkup? = null) {
-    this.sendMessage(
-        chatId = ChatId.fromId(chatId),
-        text = text,
-        replyMarkup = replyMarkup
-    )
 }
