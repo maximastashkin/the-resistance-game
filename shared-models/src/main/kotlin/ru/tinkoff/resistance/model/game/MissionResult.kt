@@ -1,4 +1,4 @@
-package ru.tinkoff.resistance.game
+package ru.tinkoff.resistance.model.game
 
 enum class MissionResult {
     NONE,

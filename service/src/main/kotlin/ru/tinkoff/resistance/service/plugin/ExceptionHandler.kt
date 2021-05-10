@@ -17,7 +17,7 @@ fun Application.configureExceptionHandler() {
             call.respond(HttpStatusCode.InternalServerError, it.errorCode)
         }
         exception<PlayerNotFoundException> {
-            call.respond(HttpStatusCode.NotFound, it.apiId)
+            call.respond(HttpStatusCode.NotFound)
         }
     }
 }

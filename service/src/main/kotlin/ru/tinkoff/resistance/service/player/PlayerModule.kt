@@ -19,7 +19,7 @@ fun Application.playerModule() {
             post {
                 val request = call.receive<PlayerCreateRequest>()
                 runCatching {
-                    service.create(request.apiId, request.name, null)
+                    service.create(request.apiId, request.name, -1)
                 }.onSuccess {
                     call.respond(HttpStatusCode.Created)
                 }.onFailure {

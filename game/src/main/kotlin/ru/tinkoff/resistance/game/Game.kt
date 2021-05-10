@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import ru.tinkoff.resistance.model.game.GameState
+import ru.tinkoff.resistance.model.game.MissionResult
 import ru.tinkoff.resistance.model.game.Role
 import kotlin.properties.Delegates
 import kotlin.random.Random
@@ -29,7 +30,7 @@ import kotlin.random.Random
  * @constructor добавляет в список игроков создателя сессии
  */
 @Serializable
-class Game(val id: Int, val hostId: Int, private val hostName: String) {
+class Game(val id: Int, private val hostId: Int, private val hostName: String) {
 
     var players: MutableList<Player> = mutableListOf()
     private var missions: List<Mission> = emptyList()
@@ -331,6 +332,18 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
      * @return список игроков-не предателей.
      */
     fun getNotTraitors(): List<Player> = players.filter { !it.isTraitor() }
+
+    /**
+     * @return результат последней миссии. Если миссий не было - MissionResult.NONE
+     */
+    fun getLastMissionResult(): MissionResult {
+        runCatching {
+            missions[currentMission - 1]
+        }.onSuccess {
+            return it.missionResult
+        }
+        return MissionResult.NONE
+    }
 
     //FOR TESTS
     fun getTraitors(): List<Player> = players.filter { it.isTraitor() }

@@ -21,7 +21,7 @@ class PlayerDao(private val db: Database) {
         }.first())
     }
 
-    fun create(apiId: Long, name: String, currentGameId: Int?): Player = transaction(db) {
+    fun create(apiId: Long, name: String, currentGameId: Int): Player = transaction(db) {
         val id = Players.insertAndGetId {
             it[Players.apiId] = apiId
             it[Players.name] = name
@@ -30,7 +30,7 @@ class PlayerDao(private val db: Database) {
         Player(id.value, apiId, name, currentGameId)
     }
 
-    fun update(id: Int, apiId: Long, name: String, currentGameId: Int?): Int = transaction(db) {
+    fun update(id: Int, apiId: Long, name: String, currentGameId: Int): Int = transaction(db) {
         Players.update({ Players.id eq id }) {
             it[Players.apiId] = apiId
             it[Players.name] = name

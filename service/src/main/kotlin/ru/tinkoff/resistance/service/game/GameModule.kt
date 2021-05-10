@@ -12,10 +12,9 @@ import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.kodein.di.singleton
 import ru.tinkoff.resistance.errocodes.CommandErrorCode
-import ru.tinkoff.resistance.game.Game
 import ru.tinkoff.resistance.game.commands.*
-import ru.tinkoff.resistance.model.game.GameState
 import ru.tinkoff.resistance.model.request.*
+import ru.tinkoff.resistance.model.response.InfoResponse
 import ru.tinkoff.resistance.service.game.controller.GameController
 import ru.tinkoff.resistance.service.game.history.GamesHistoryDao
 import ru.tinkoff.resistance.service.game.history.GamesHistoryService
@@ -27,6 +26,7 @@ fun Application.gameModule() {
     val controller: GameController by closestDI().instance()
     val playerService: PlayerService by closestDI().instance()
     val gamesHistoryService: GamesHistoryService by closestDI().instance()
+    val infoResponseFormer: InfoResponseFormer by closestDI().instance()
     routing {
         route("/game/create") {
             post {
@@ -57,15 +57,16 @@ fun Application.gameModule() {
             get {
                 val apiId = call.parameters["hostApiId"]?.toLong()
                 if (apiId != null) {
-                    with(playerService.findByApiId(apiId)) {
-                        val game = controller.getGameById(currentGameId ?: -1)
-                        respondFormingResponse(game, playerService, service, controller, StartGameCommand(id, name))
-                        game.players.map {
-                            it.id
-                        }.forEach {
-                            gamesHistoryService.create(it, game.id)
-                        }
-                    }
+                    val player = playerService.findByApiId(apiId)
+                    val command = StartGameCommand(player.id, player.name)
+                    controller.executeCommandWithGameStateChangeHandle(
+                        player.currentGameId,
+                        service,
+                        playerService,
+                        command
+                    )
+                    respond(controller.getInfoResponse(player.currentGameId, infoResponseFormer))
+                    controller.createGameHistory(player.currentGameId, gamesHistoryService)
                 } else {
                     // Плохой запрос
                     call.respond(HttpStatusCode.BadRequest)
@@ -75,82 +76,54 @@ fun Application.gameModule() {
         route("/game/chooseplayerformission") {
             post {
                 val request = call.receive<ChoosePlayerForMissionRequest>()
-                with(playerService.findByApiId(request.leaderApiId)) {
-                    val candidate = playerService.findByApiId(request.candidateApiId)
-                    val game = controller.getGameById(currentGameId ?: -1)
-                    respondFormingResponse(
-                        game,
-                        playerService,
-                        service,
-                        controller,
-                        ChoosePlayerForMissionCommand(id, name, candidate.id)
-                    )
-                }
+                val player = playerService.findByApiId(request.leaderApiId)
+                val command = ChoosePlayerForMissionCommand(
+                    player.id,
+                    player.name,
+                    playerService.findByApiId(request.candidateApiId).id
+                )
+                controller.executeCommandWithGameStateChangeHandle(
+                    player.currentGameId,
+                    service,
+                    playerService,
+                    command
+                )
+                respond(controller.getInfoResponse(player.currentGameId, infoResponseFormer))
             }
         }
         route("/game/voteforteam") {
             post {
                 val request = call.receive<VoteForTeamRequest>()
-                with(playerService.findByApiId(request.apiId)) {
-                    val game = controller.getGameById(currentGameId ?: -1)
-                    respondFormingResponse(
-                        game,
-                        playerService,
-                        service,
-                        controller,
-                        VoteForTeamCommand(id, name, request.agreement)
-                    )
-                }
+                val player = playerService.findByApiId(request.apiId)
+                val command = VoteForTeamCommand(player.id, player.name, request.agreement)
+                controller.executeCommandWithGameStateChangeHandle(
+                    player.currentGameId,
+                    service,
+                    playerService,
+                    command
+                )
+                respond(controller.getInfoResponse(player.currentGameId, infoResponseFormer))
             }
         }
         route("/game/missionaction") {
             post {
                 val request = call.receive<MissionActionRequest>()
-                with(playerService.findByApiId(request.apiId)) {
-                    val game = controller.getGameById(currentGameId ?: -1)
-                    respondFormingResponse(
-                        game,
-                        playerService,
-                        service,
-                        controller,
-                        MissionActionCommand(id, name, request.action)
-                    )
-                }
+                val player = playerService.findByApiId(request.apiId)
+                val command = MissionActionCommand(player.id, player.name, request.action)
+                controller.executeCommandWithGameStateChangeHandle(
+                    player.currentGameId,
+                    service,
+                    playerService,
+                    command
+                )
+                respond(controller.getInfoResponse(player.currentGameId, infoResponseFormer))
             }
         }
     }
 }
 
-private suspend fun PipelineContext<Unit, ApplicationCall>.respondFormingResponse(
-    game: Game,
-    playerService: PlayerService,
-    gameService: GameService,
-    gameController: GameController,
-    command: Command
-) {
-    game.onGameStateChanged = endGameStatementHandler(game, gameService, playerService, gameController)
-    game.executeCommand(command)
-    call.respond(HttpStatusCode.OK, GameResponsesFormer.formInfoResponse(game, playerService))
-}
-
-fun endGameStatementHandler(
-    game: Game,
-    gameService: GameService,
-    playerService: PlayerService,
-    gameController: GameController
-) = { _: GameState, new: GameState ->
-    if (new == GameState.END) {
-        gameService.update(game.id, game.winner.num)
-        kickPlayersFromGame(game, playerService)
-        gameController.deleteGameFromActive(game)
-    }
-}
-
-fun kickPlayersFromGame(game: Game, playerService: PlayerService) {
-    game.players.forEach {
-        val currentEntity = playerService.findById(it.id)
-        playerService.update(currentEntity.id, currentEntity.apiId, currentEntity.name, null)
-    }
+private suspend fun PipelineContext<Unit, ApplicationCall>.respond(respondPair: Pair<HttpStatusCode, InfoResponse>) {
+    call.respond(respondPair.first, respondPair.second)
 }
 
 fun DI.Builder.gameComponents() {
@@ -159,4 +132,5 @@ fun DI.Builder.gameComponents() {
     bind<GameController>() with singleton { GameController() }
     bind<GamesHistoryDao>() with singleton { GamesHistoryDao(instance()) }
     bind<GamesHistoryService>() with singleton { GamesHistoryService(instance(), instance()) }
+    bind<InfoResponseFormer>() with singleton { InfoResponseFormer(instance()) }
 }
