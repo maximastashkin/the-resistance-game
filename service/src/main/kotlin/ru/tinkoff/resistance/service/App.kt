@@ -1,7 +1,5 @@
 package ru.tinkoff.resistance.service
 
-import AppConfig
-import DataBaseConfig
 import com.typesafe.config.ConfigFactory
 import io.github.config4k.extract
 import io.ktor.server.engine.*
@@ -53,7 +51,8 @@ fun migrate(dataBaseConfig: DataBaseConfig) {
         .dataSource(
             dataBaseConfig.url,
             dataBaseConfig.user,
-            dataBaseConfig.password)
+            dataBaseConfig.password
+        )
         .load()
         .migrate()
 }

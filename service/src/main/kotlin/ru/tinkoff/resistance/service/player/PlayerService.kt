@@ -1,6 +1,5 @@
 package ru.tinkoff.resistance.service.player
 
-import io.ktor.features.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.transaction
 

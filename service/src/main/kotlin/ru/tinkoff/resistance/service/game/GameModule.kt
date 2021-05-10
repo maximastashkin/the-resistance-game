@@ -59,7 +59,7 @@ fun Application.gameModule() {
                 if (apiId != null) {
                     with(playerService.findByApiId(apiId)) {
                         val game = controller.getGameById(currentGameId ?: -1)
-                        respondFormingResponse(game, playerService, StartGameCommand(id, name))
+                        respondFormingResponse(game, playerService, service, controller, StartGameCommand(id, name))
                         game.players.map {
                             it.id
                         }.forEach {
@@ -78,7 +78,13 @@ fun Application.gameModule() {
                 with(playerService.findByApiId(request.leaderApiId)) {
                     val candidate = playerService.findByApiId(request.candidateApiId)
                     val game = controller.getGameById(currentGameId ?: -1)
-                    respondFormingResponse(game, playerService, ChoosePlayerForMissionCommand(id, name, candidate.id))
+                    respondFormingResponse(
+                        game,
+                        playerService,
+                        service,
+                        controller,
+                        ChoosePlayerForMissionCommand(id, name, candidate.id)
+                    )
                 }
             }
         }
@@ -87,12 +93,13 @@ fun Application.gameModule() {
                 val request = call.receive<VoteForTeamRequest>()
                 with(playerService.findByApiId(request.apiId)) {
                     val game = controller.getGameById(currentGameId ?: -1)
-                    game.onGameStateChanged = {_, new ->
-                        if (new == GameState.END) {
-                            service.update(game.id, game.winner.ordinal)
-                        }
-                    }
-                    respondFormingResponse(game, playerService, VoteForTeamCommand(id, name, request.agreement))
+                    respondFormingResponse(
+                        game,
+                        playerService,
+                        service,
+                        controller,
+                        VoteForTeamCommand(id, name, request.agreement)
+                    )
                 }
             }
         }
@@ -101,12 +108,13 @@ fun Application.gameModule() {
                 val request = call.receive<MissionActionRequest>()
                 with(playerService.findByApiId(request.apiId)) {
                     val game = controller.getGameById(currentGameId ?: -1)
-                    game.onGameStateChanged = {_, new ->
-                        if (new == GameState.END) {
-                            service.update(game.id, game.winner.ordinal)
-                        }
-                    }
-                    respondFormingResponse(game, playerService, MissionActionCommand(id, name, request.action))
+                    respondFormingResponse(
+                        game,
+                        playerService,
+                        service,
+                        controller,
+                        MissionActionCommand(id, name, request.action)
+                    )
                 }
             }
         }
@@ -116,10 +124,33 @@ fun Application.gameModule() {
 private suspend fun PipelineContext<Unit, ApplicationCall>.respondFormingResponse(
     game: Game,
     playerService: PlayerService,
+    gameService: GameService,
+    gameController: GameController,
     command: Command
 ) {
+    game.onGameStateChanged = endGameStatementHandler(game, gameService, playerService, gameController)
     game.executeCommand(command)
     call.respond(HttpStatusCode.OK, GameResponsesFormer.formInfoResponse(game, playerService))
+}
+
+fun endGameStatementHandler(
+    game: Game,
+    gameService: GameService,
+    playerService: PlayerService,
+    gameController: GameController
+) = { _: GameState, new: GameState ->
+    if (new == GameState.END) {
+        gameService.update(game.id, game.winner.num)
+        kickPlayersFromGame(game, playerService)
+        gameController.deleteGameFromActive(game)
+    }
+}
+
+fun kickPlayersFromGame(game: Game, playerService: PlayerService) {
+    game.players.forEach {
+        val currentEntity = playerService.findById(it.id)
+        playerService.update(currentEntity.id, currentEntity.apiId, currentEntity.name, null)
+    }
 }
 
 fun DI.Builder.gameComponents() {

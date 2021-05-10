@@ -16,4 +16,6 @@ class GameController {
             it.id == gameId
         } ?: throw GameNotFoundException("Game with id = $gameId not found.", CommandErrorCode.GAME_NOT_FOUND)
     }
+
+    fun deleteGameFromActive(game: Game) = activeGames.remove(game)
 }

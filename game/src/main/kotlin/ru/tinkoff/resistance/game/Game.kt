@@ -20,10 +20,10 @@ import kotlin.random.Random
  * @property winner роль, которая победила в сессии
  * @property gameState определенное состояние игры
  * @property onGameStateChanged событие, которое вызывается при изменении свойства GameState
- * @property missionLeader индентификатор лидера текущей миссии
+ * @property missionLeader идентификатор лидера текущей миссии
  * @property currentMission номер текущей миссии
  * @property failedVotes количество неудавшихся наборов игроков для миссии
- * @property teammates список игроков, которые учавствуют в текущей миссии
+ * @property teammates список игроков, которые участвуют в текущей миссии
  * @property votes список голосов за выбранную лидером команду
  *
  * @constructor добавляет в список игроков создателя сессии
@@ -113,7 +113,7 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
             Mission(it, MissionResult.NONE)
         }
         val roles = GameConfiguration.getRoles(playerCount())
-        players.shuffled().mapIndexed() {  index, player ->
+        players.shuffled().mapIndexed { index, player ->
             if (index < roles!!.first) {
                 setPlayerRole(player, Role.RESISTANCE)
             } else {
@@ -140,9 +140,9 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
     }
 
     /**
-     * Проверяет учавствует ли игрок в миссии или нет
+     * Проверяет участвует ли игрок в миссии или нет
      * @param id идентификатор игрока для проверки
-     * @return true - если игрок учавствует в миссии, иначе false
+     * @return true - если игрок участвует в миссии, иначе false
      */
     fun isContainsTeammate(id: Int): Boolean = teammates.contains(id)
 
@@ -189,8 +189,8 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
         teammates[players[missionLeader].id] = MissionResult.NONE
 
         if (failedVotes == 5) {
-            gameState = GameState.END
             winner = Role.TRAITOR
+            gameState = GameState.END
         }
     }
 
@@ -236,7 +236,7 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
     }
 
     /**
-     * Устанавливает словарь (playerID - ru.tinkoff.resistanse.game.VoteResult) в исходное состояние (никто не проголосовал)
+     * Устанавливает словарь (playerID - ru.tinkoff.resistance.game.VoteResult) в исходное состояние (никто не проголосовал)
      */
     private fun setAllVotesToUnvoted() {
         for (key in votes.keys) {
@@ -250,7 +250,7 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
     private fun getCountAgreeVotes(): Int = votes.count { it.value == VoteResult.AGREE }
 
     /**
-     * @return возврашает количество игроков, которые не согласились с командой
+     * @return возвращает количество игроков, которые не согласились с командой
      */
     private fun getCountDisagreeVotes(): Int = votes.count { it.value == VoteResult.DISAGREE }
 
@@ -269,11 +269,11 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
             missions[currentMission].missionResult =
                 if (getCountFailMissions() > 0) MissionResult.FAIL else MissionResult.SUCCESS
             if (getCountFailedMissions() == 3) {
-                gameState = GameState.END
                 winner = Role.TRAITOR
-            } else if (getCountSuccessedMissions() == 3) {
                 gameState = GameState.END
+            } else if (getCountSuccessedMissions() == 3) {
                 winner = Role.RESISTANCE
+                gameState = GameState.END
             }
 
             if (gameState != GameState.END) {
@@ -283,9 +283,9 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
     }
 
     /**
-     * Проверяет учавствует игрок в миссии или нет
+     * Проверяет участвует игрок в миссии или нет
      * @param id идентификатор игрока
-     * @return true, если игрок учавствует в миссии, иначе false
+     * @return true, если игрок участвует в миссии, иначе false
      */
     fun isInTeam(id: Int): Boolean = teammates[id] != null
 
@@ -310,7 +310,7 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
     }
 
     /**
-     * Проверяет все ли проголосовали в миссиии ли нет
+     * Проверяет все ли проголосовали в миссии ли нет
      * @return true, если все проголосовали, иначе false
      */
     private fun isAllDoneMission(): Boolean = teammates.all { it.value != MissionResult.NONE }
@@ -319,7 +319,7 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
      * Считает количество выигранных миссий предателями
      * @return количество миссий, которые выиграли предатели
      */
-     fun getCountFailedMissions(): Int = missions.count { it.missionResult == MissionResult.FAIL }
+    fun getCountFailedMissions(): Int = missions.count { it.missionResult == MissionResult.FAIL }
 
     /**
      * Считает количество выигранных миссий сопротивлением
@@ -335,7 +335,9 @@ class Game(val id: Int, val hostId: Int, private val hostName: String) {
     //FOR TESTS
     fun getTraitors(): List<Player> = players.filter { it.isTraitor() }
     fun getLeader(): Player = players[missionLeader]
-    fun getPlayersToMission(): List<Player> = players.filter { it.id != getLeaderId() }.subList(0, missions[currentMission].players - 1)
+    fun getPlayersToMission(): List<Player> =
+        players.filter { it.id != getLeaderId() }.subList(0, missions[currentMission].players - 1)
+
     fun getPlayersExcludeLeader(): List<Player> = players.filter { it.id != getLeaderId() }
     fun getLastPlayer(): Player = players.last { it.id != getLeaderId() }
 }

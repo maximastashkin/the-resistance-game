@@ -15,12 +15,17 @@ class VoteForTeamCommand(
 ) : Command {
     override fun execute(game: Game) {
         if (game.gameState != GameState.VOTING) {
-            throw CommandExecutionException("Попытка голосования за команду во время другой стадии игры ($senderId, $senderName).",
-                CommandErrorCode.VOTE_IN_NOT_VOTE_STATE)
+            throw CommandExecutionException(
+                "Попытка голосования за команду во время другой стадии игры ($senderId, $senderName).",
+                CommandErrorCode.VOTE_IN_NOT_VOTE_STATE
+            )
         }
 
         if (game.isVoteToTeam(senderId)) {
-            throw CommandExecutionException("Игрок уже проголосовал за команду ($senderId, $senderName).", CommandErrorCode.ALREADY_VOTE)
+            throw CommandExecutionException(
+                "Игрок уже проголосовал за команду ($senderId, $senderName).",
+                CommandErrorCode.ALREADY_VOTE
+            )
         }
 
         game.setTeamVote(senderId, agreement)

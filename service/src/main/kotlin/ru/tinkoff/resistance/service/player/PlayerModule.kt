@@ -15,7 +15,7 @@ import ru.tinkoff.resistance.model.request.PlayerCreateRequest
 fun Application.playerModule() {
     val service: PlayerService by closestDI().instance()
     routing {
-        route ("/player") {
+        route("/player") {
             post {
                 val request = call.receive<PlayerCreateRequest>()
                 runCatching {
@@ -32,5 +32,5 @@ fun Application.playerModule() {
 
 fun DI.Builder.playerComponents() {
     bind<PlayerDao>() with singleton { PlayerDao(instance()) }
-    bind<PlayerService>() with singleton {PlayerService(instance(), instance())}
+    bind<PlayerService>() with singleton { PlayerService(instance(), instance()) }
 }

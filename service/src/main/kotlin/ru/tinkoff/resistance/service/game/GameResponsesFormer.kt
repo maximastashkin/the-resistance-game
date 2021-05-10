@@ -15,7 +15,11 @@ class GameResponsesFormer {
             countSuccessedMissions = game.getCountSuccessedMissions(),
             missionLeader = getPlayerApiIdAndName(game.getLeader(), service)
         )
-        private fun getPlayersApiIds(players: List<ru.tinkoff.resistance.game.Player>, service: PlayerService): List<Pair<Long, String>> {
+
+        private fun getPlayersApiIds(
+            players: List<ru.tinkoff.resistance.game.Player>,
+            service: PlayerService
+        ): List<Pair<Long, String>> {
             val output = mutableListOf<Pair<Long, String>>()
             players.forEach {
                 output.add(getPlayerApiIdAndName(it, service))
@@ -23,7 +27,10 @@ class GameResponsesFormer {
             return output
         }
 
-        private fun getPlayerApiIdAndName(player: ru.tinkoff.resistance.game.Player, service: PlayerService): Pair<Long, String> {
+        private fun getPlayerApiIdAndName(
+            player: ru.tinkoff.resistance.game.Player,
+            service: PlayerService
+        ): Pair<Long, String> {
             val gamePlayer = service.findById(player.id)
             return Pair(gamePlayer.apiId, gamePlayer.name)
         }

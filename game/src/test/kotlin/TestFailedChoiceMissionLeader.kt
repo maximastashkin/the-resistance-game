@@ -31,9 +31,9 @@ class TestFailedChoiceMissionLeader {
         assert(game.gameState == GameState.TEAMING)
 
         repeat(5) {
-            var playersToMission = game.getPlayersToMission()
-            var playersExcludeLeader = game.getPlayersExcludeLeader()
-            var leader = game.getLeader()
+            val playersToMission = game.getPlayersToMission()
+            val playersExcludeLeader = game.getPlayersExcludeLeader()
+            val leader = game.getLeader()
 
             playersToMission.forEach {
                 game.executeCommand(ChoosePlayerForMissionCommand(leader.id, leader.name, it.id))

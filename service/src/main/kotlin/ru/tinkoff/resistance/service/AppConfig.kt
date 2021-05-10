@@ -1,3 +1,4 @@
+package ru.tinkoff.resistance.service
 data class AppConfig(val http: HttpConfig, val dataBase: DataBaseConfig)
 
 data class HttpConfig(val host: String, val port: Int)
