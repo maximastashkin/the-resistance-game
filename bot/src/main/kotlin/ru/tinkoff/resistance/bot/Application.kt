@@ -7,6 +7,7 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.features.json.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import ru.tinkoff.resistance.bot.telegramBot.botModule
 
 
 fun main() {

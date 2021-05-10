@@ -1,4 +1,4 @@
-package ru.tinkoff.resistance.bot
+package ru.tinkoff.resistance.bot.telegramBot
 
 import ru.tinkoff.resistance.errocodes.CommandErrorCode
 
