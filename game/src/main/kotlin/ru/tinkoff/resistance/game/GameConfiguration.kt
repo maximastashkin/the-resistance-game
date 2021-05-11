@@ -15,7 +15,8 @@ class GameConfiguration {
         private val countPlayerWithRoles = mapOf(
             5 to Pair(3, 2),
             6 to Pair(4, 2),
-            7 to Pair(5, 3),
+            7 to Pair(4, 3),
+            8 to Pair(5, 3),
             9 to Pair(6, 3),
             10 to Pair(6, 4))
 
