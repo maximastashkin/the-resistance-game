@@ -105,6 +105,16 @@ class Game(val id: Int, private val hostId: Int, private val hostName: String) {
         players.add(Player(playerId, playerName))
     }
 
+    /**
+     * Удаляет игрока из списка
+     * @param playerId идентификатор нового игрока
+     * @param playerName имя нового игрока
+     */
+    fun leaveFromLobby(playerId: Int, playerName: String) {
+        players.remove(getPlayerById(playerId))
+    }
+
+
     //START
     /**
      * Запускает игру: раздает роли, устанавливает миссии, выбирает текущего лидера, запускает набор игроков
@@ -343,6 +353,14 @@ class Game(val id: Int, private val hostId: Int, private val hostName: String) {
             return it.missionResult
         }
         return MissionResult.NONE
+    }
+
+    /**
+     * Досрочное завершение игры, когда кто-то ливает из игры
+     */
+    fun earlyFinishGame() {
+        winner = Role.NONE
+        gameState = GameState.END
     }
 
     //FOR TESTS
