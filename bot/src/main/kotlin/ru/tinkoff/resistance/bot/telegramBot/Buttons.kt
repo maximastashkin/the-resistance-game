@@ -14,8 +14,8 @@ class Buttons {
             InlineKeyboardButton.CallbackData("Против", "voteNo"),
         )
         val MISSION_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
-            InlineKeyboardButton.CallbackData("Успех", "voteSuccess"),
-            InlineKeyboardButton.CallbackData("Фейл", "voteFail"),
+            InlineKeyboardButton.CallbackData("Успех", "missionSuccess"),
+            InlineKeyboardButton.CallbackData("Фейл", "missionFail"),
         )
         val START_GAME = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("Начать игру", "start")
