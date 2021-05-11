@@ -23,15 +23,23 @@ class GameController {
         } ?: throw GameNotFoundException("Game with id = $gameId not found.", CommandErrorCode.GAME_NOT_FOUND)
     }
 
-    fun executeCommandWithGameStateChangeHandle(
+    fun executeCommand(
         gameId: Int,
-        gameService: GameService,
-        playerService: PlayerService,
         command: Command
     ) {
         val game = getGameById(gameId)
-        game.onGameStateChanged = endGameStatementHandler(game, gameService, playerService)
         game.executeCommand(command)
+    }
+
+    fun closeGame(
+        gameId: Int,
+        gameService: GameService,
+        playerService: PlayerService
+    ) {
+        val game = getGameById(gameId)
+        gameService.update(game.id, game.winner.num)
+        kickPlayersFromGame(game, playerService)
+        deleteGameFromActive(game)
     }
 
     fun getInfoResponse(gameId: Int, infoResponseFormer: InfoResponseFormer) =
@@ -52,18 +60,6 @@ class GameController {
         game.players.forEach {
             val currentEntity = playerService.findById(it.id)
             playerService.update(currentEntity.id, currentEntity.apiId, currentEntity.name, -1)
-        }
-    }
-
-    private fun endGameStatementHandler(
-        game: Game,
-        gameService: GameService,
-        playerService: PlayerService,
-    ) = { _: GameState, new: GameState ->
-        if (new == GameState.END) {
-            gameService.update(game.id, game.winner.num)
-            kickPlayersFromGame(game, playerService)
-            deleteGameFromActive(game)
         }
     }
 

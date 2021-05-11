@@ -53,16 +53,32 @@ fun Application.gameModule() {
                 call.respond(HttpStatusCode.OK)
             }
         }
+        route("/game/leave/{apiId}") {
+            get {
+                val apiId = call.parameters["apiId"]?.toLong()
+                if (apiId != null) {
+                    val player = playerService.findByApiId(apiId)
+                    val command = LeaveFromLobbyCommand(player.id, player.name)
+                    controller.executeCommand(
+                        player.currentGameId,
+                        command
+                    )
+                    with(player) {
+                        playerService.update(id, apiId, name, -1)
+                    }
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
+            }
+        }
         route("/game/start/{hostApiId}") {
             get {
                 val apiId = call.parameters["hostApiId"]?.toLong()
                 if (apiId != null) {
                     val player = playerService.findByApiId(apiId)
                     val command = StartGameCommand(player.id, player.name)
-                    controller.executeCommandWithGameStateChangeHandle(
+                    controller.executeCommand(
                         player.currentGameId,
-                        service,
-                        playerService,
                         command
                     )
                     respond(controller.getInfoResponse(player.currentGameId, infoResponseFormer))
@@ -82,10 +98,8 @@ fun Application.gameModule() {
                     player.name,
                     playerService.findByApiId(request.candidateApiId).id
                 )
-                controller.executeCommandWithGameStateChangeHandle(
+                controller.executeCommand(
                     player.currentGameId,
-                    service,
-                    playerService,
                     command
                 )
                 respond(controller.getInfoResponse(player.currentGameId, infoResponseFormer))
@@ -96,10 +110,8 @@ fun Application.gameModule() {
                 val request = call.receive<VoteForTeamRequest>()
                 val player = playerService.findByApiId(request.apiId)
                 val command = VoteForTeamCommand(player.id, player.name, request.agreement)
-                controller.executeCommandWithGameStateChangeHandle(
+                controller.executeCommand(
                     player.currentGameId,
-                    service,
-                    playerService,
                     command
                 )
                 respond(controller.getInfoResponse(player.currentGameId, infoResponseFormer))
@@ -110,13 +122,24 @@ fun Application.gameModule() {
                 val request = call.receive<MissionActionRequest>()
                 val player = playerService.findByApiId(request.apiId)
                 val command = MissionActionCommand(player.id, player.name, request.action)
-                controller.executeCommandWithGameStateChangeHandle(
+                controller.executeCommand(
                     player.currentGameId,
-                    service,
-                    playerService,
                     command
                 )
                 respond(controller.getInfoResponse(player.currentGameId, infoResponseFormer))
+            }
+        }
+        route("/game/close/{apiId}") {
+            delete {
+                val apiId = call.parameters["apiId"]?.toLong()
+                if (apiId != null) {
+                    val player = playerService.findByApiId(apiId)
+                    val command = EarlyFinishGameCommand(player.id, player.name)
+                    controller.executeCommand(player.currentGameId, command)
+                    controller.closeGame(playerService.findByApiId(apiId).currentGameId, service, playerService)
+                } else {
+                    call.respond(HttpStatusCode.BadRequest)
+                }
             }
         }
     }
