@@ -9,16 +9,24 @@ class Buttons {
             InlineKeyboardButton.CallbackData("Создать", "create"),
             InlineKeyboardButton.CallbackData("Войти", "join"),
         )
+
+        val LOBBY_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
+            InlineKeyboardButton.CallbackData("Покинуть лобби", "leave")
+        )
+
         val VOTING_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("За", "voteYes"),
             InlineKeyboardButton.CallbackData("Против", "voteNo"),
         )
+
         val MISSION_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("Успех", "missionSuccess"),
             InlineKeyboardButton.CallbackData("Фейл", "missionFail"),
         )
+
         val START_GAME = InlineKeyboardMarkup.createSingleRowKeyboard(
-            InlineKeyboardButton.CallbackData("Начать игру", "start")
+            InlineKeyboardButton.CallbackData("Начать игру", "start"),
+            InlineKeyboardButton.CallbackData("Покинуть лобби", "leave")
             )
 
         fun getTeamingButtons(players: List<Pair<Long, String>>): InlineKeyboardMarkup {

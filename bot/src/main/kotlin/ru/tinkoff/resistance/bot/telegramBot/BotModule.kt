@@ -93,7 +93,11 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                             }
                             when (response.status) {
                                 HttpStatusCode.OK -> {
-                                    bot.sendMsg(message.chat.id, "Вы успешно зашли в игру. Номер игры: $lobbyId")
+                                    bot.sendMsg(
+                                        message.chat.id,
+                                        "Вы успешно зашли в игру. Номер игры: $lobbyId",
+                                        Buttons.LOBBY_BUTTONS
+                                    )
                                 }
                                 HttpStatusCode.InternalServerError -> {
                                     val commandErrorCode = response.receive<CommandErrorCode>()
@@ -111,6 +115,32 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                     }
                 } else {
                     bot.sendMsg(message.chat.id, "Команда введена не правильно")
+                }
+            }
+
+            callbackQuery("leave") {
+                val id = callbackQuery.from.id
+                runBlocking {
+                    val response = client.get<HttpResponse>(config.server.url + "game/leave/$id") {
+                        method = HttpMethod.Get
+                        contentType(ContentType.Application.Json)
+                    }
+                    when (response.status) {
+                        HttpStatusCode.OK -> {
+                            bot.sendMsg(id, "Вы успешно покинули лоби", Buttons.START_BUTTONS)
+                            bot.deleteLastMsg(callbackQuery)
+                        }
+                        HttpStatusCode.InternalServerError -> {
+                            val commandErrorCode = response.receive<CommandErrorCode>()
+                            bot.sendMsg(id, commandErrorCode.getMessage())
+                        }
+                        HttpStatusCode.NotFound -> {
+                            bot.sendMsg(id, "Вы не найдены в базе")
+                        }
+                        else -> {
+                            bot.sendMsg(id, "Что-то пошло не так")
+                        }
+                    }
                 }
             }
 
@@ -183,7 +213,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                     when (response.status) {
                         HttpStatusCode.OK -> {
                             val infoResponse = response.receive<InfoResponse>()
-                            bot.voteForTeam(infoResponse)
+                            bot.voteForTeam(infoResponse, client, config)
                             bot.deleteLastMsg(callbackQuery)
                         }
                         HttpStatusCode.InternalServerError -> {
@@ -209,7 +239,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                     when (response.status) {
                         HttpStatusCode.OK -> {
                             val infoResponse = response.receive<InfoResponse>()
-                            bot.mission(infoResponse)
+                            bot.mission(infoResponse, client, config)
                             bot.deleteLastMsg(callbackQuery)
                         }
                         HttpStatusCode.InternalServerError -> {
