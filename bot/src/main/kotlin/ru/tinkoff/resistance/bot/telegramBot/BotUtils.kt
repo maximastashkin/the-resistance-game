@@ -4,6 +4,11 @@ import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.entities.CallbackQuery
 import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.ReplyMarkup
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import kotlinx.coroutines.runBlocking
+import ru.tinkoff.resistance.bot.AppConfig
 import ru.tinkoff.resistance.model.game.GameState
 import ru.tinkoff.resistance.model.game.Role
 import ru.tinkoff.resistance.model.response.InfoResponse
@@ -35,7 +40,7 @@ fun getNames(list: List<Pair<Long, String>>): String {
 fun Bot.startGame(infoResponse: InfoResponse) {
     val traitors = infoResponse.traitors
     val notTraitors = infoResponse.notTraitors
-    val players = traitors + notTraitors
+    val players = (traitors + notTraitors).shuffled()
     val leader = infoResponse.missionLeader
     val playerNames = "Список игроков: \n${getNames(players)}"
     val leaderInfo = "Лидер первого раунда ${leader.second}."
@@ -53,7 +58,7 @@ fun Bot.startGame(infoResponse: InfoResponse) {
     }
     this.sendMsg(
         leader.first, "Вы лидер. Набирайте команду",
-        Buttons.getTeamingButtons(players.shuffled())
+        Buttons.getTeamingButtons(players-leader)
     )
 }
 
@@ -90,7 +95,7 @@ fun Bot.choosePlayer(infoResponse: InfoResponse) {
     }
 }
 
-fun Bot.voteForTeam(infoResponse: InfoResponse) {
+fun Bot.voteForTeam(infoResponse: InfoResponse, client: HttpClient, config: AppConfig) {
     val traitors = infoResponse.traitors
     val leader = infoResponse.missionLeader
     val notTraitors = infoResponse.notTraitors
@@ -108,7 +113,7 @@ fun Bot.voteForTeam(infoResponse: InfoResponse) {
         }
         GameState.TEAMING -> {
             players.forEach {
-                this.sendMsg(it.first, "Голосование решило поменять команду.")
+                this.sendMsg(it.first, "Голосование решило поменять команду")
                 this.sendMsg(it.first, "Новый лидер: ${leader.second}")
             }
             this.sendMsg(
@@ -117,24 +122,27 @@ fun Bot.voteForTeam(infoResponse: InfoResponse) {
             )
         }
         GameState.END -> {
-            gameOver(infoResponse)
+            players.forEach {
+                this.sendMsg(it.first, "Голосование прервалось 5 раз. Игра окончена")
+            }
+            gameOver(infoResponse, client, config)
         }
     }
 }
 
-fun Bot.mission(infoResponse: InfoResponse) {
+fun Bot.mission(infoResponse: InfoResponse, client: HttpClient, config: AppConfig) {
     val traitors = infoResponse.traitors
     val leader = infoResponse.missionLeader
     val notTraitors = infoResponse.notTraitors
     val countSuccessMissions = infoResponse.countSuccessedMissions
     val countFailedMissions = infoResponse.countFailedMissions
     val players = traitors + notTraitors
-    players.forEach {
-        this.sendMsg(it.first, "Миссия завершилась c исходом: ${infoResponse.lastMissionResult}")
-        this.sendMsg(it.first, "Счет сопротивленцы $countSuccessMissions, предатели $countFailedMissions")
-    }
     when (infoResponse.gameState) {
         GameState.TEAMING -> {
+            players.forEach {
+                this.sendMsg(it.first, "Миссия завершилась c исходом: ${infoResponse.lastMissionResult}")
+                this.sendMsg(it.first, "Счет сопротивленцы $countSuccessMissions, предатели $countFailedMissions")
+            }
             players.forEach {
                 this.sendMsg(it.first, "Новый лидер: ${leader.second}")
             }
@@ -144,12 +152,16 @@ fun Bot.mission(infoResponse: InfoResponse) {
             )
         }
         GameState.END -> {
-            this.gameOver(infoResponse)
+            players.forEach {
+                this.sendMsg(it.first, "Миссия завершилась c исходом: ${infoResponse.lastMissionResult}")
+                this.sendMsg(it.first, "Счет сопротивленцы $countSuccessMissions, предатели $countFailedMissions")
+            }
+            this.gameOver(infoResponse, client, config)
         }
     }
 }
 
-fun Bot.gameOver(infoResponse: InfoResponse){
+fun Bot.gameOver(infoResponse: InfoResponse, client: HttpClient, config: AppConfig){
     val traitors = infoResponse.traitors
     val notTraitors = infoResponse.notTraitors
     val players = traitors + notTraitors
@@ -167,7 +179,13 @@ fun Bot.gameOver(infoResponse: InfoResponse){
             }
             this.sendResults(traitors, notTraitors)
         }
+        else -> {
+            players.forEach {
+                this.sendMsg(it.first, "Игра закончилась по тех причинам")
+            }
+        }
     }
+    closeGame(players[0].first, client, config)
 }
 
 fun Bot.sendResults(winners: List<Pair<Long, String>>, losers: List<Pair<Long, String>>) {
@@ -176,5 +194,11 @@ fun Bot.sendResults(winners: List<Pair<Long, String>>, losers: List<Pair<Long, S
     }
     losers.forEach {
         this.sendMsg(it.first, "К сожалению, Вы проиграли! Сыграем еще?", Buttons.START_BUTTONS)
+    }
+}
+
+fun closeGame(apiId: Long, client: HttpClient, config: AppConfig){
+    runBlocking {
+        client.delete<HttpResponse>(config.server.url + "game/close/$apiId")
     }
 }

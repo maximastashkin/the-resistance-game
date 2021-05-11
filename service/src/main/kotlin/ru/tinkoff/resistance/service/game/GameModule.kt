@@ -66,6 +66,7 @@ fun Application.gameModule() {
                     with(player) {
                         playerService.update(id, apiId, name, -1)
                     }
+                    call.respond(HttpStatusCode.OK)
                 } else {
                     call.respond(HttpStatusCode.BadRequest)
                 }
@@ -137,6 +138,7 @@ fun Application.gameModule() {
                     val command = EarlyFinishGameCommand(player.id, player.name)
                     controller.executeCommand(player.currentGameId, command)
                     controller.closeGame(playerService.findByApiId(apiId).currentGameId, service, playerService)
+                    call.respond(HttpStatusCode.OK)
                 } else {
                     call.respond(HttpStatusCode.BadRequest)
                 }
