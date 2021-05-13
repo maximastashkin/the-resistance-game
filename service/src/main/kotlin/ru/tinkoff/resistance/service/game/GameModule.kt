@@ -6,6 +6,7 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.pipeline.*
+import kotlinx.coroutines.joinAll
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
@@ -50,7 +51,10 @@ fun Application.gameModule() {
                     controller.getGameById(request.gameId).executeCommand(JoinGameCommand(id, name))
                     playerService.update(id, apiId, name, request.gameId)
                 }
-                call.respond(HttpStatusCode.OK)
+                call.respond(
+                    HttpStatusCode.OK,
+                    infoResponseFormer.formPairsApiIdsNames(controller.getGameById(request.gameId))
+                )
             }
         }
         route("/game/leave/{apiId}") {
@@ -66,7 +70,10 @@ fun Application.gameModule() {
                     with(player) {
                         playerService.update(id, apiId, name, -1)
                     }
-                    call.respond(HttpStatusCode.OK)
+                    call.respond(
+                        HttpStatusCode.OK,
+                        infoResponseFormer.formPairsApiIdsNames(controller.getGameById(player.currentGameId))
+                    )
                 } else {
                     call.respond(HttpStatusCode.BadRequest)
                 }
@@ -142,6 +149,11 @@ fun Application.gameModule() {
                 } else {
                     call.respond(HttpStatusCode.BadRequest)
                 }
+            }
+        }
+        route("/game/getallactiveusers") {
+            get {
+                call.respond(HttpStatusCode.OK, controller.getAllActivePlayersApiIds(playerService))
             }
         }
     }

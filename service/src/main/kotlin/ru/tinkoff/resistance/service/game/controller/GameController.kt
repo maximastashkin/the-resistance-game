@@ -23,6 +23,12 @@ class GameController {
         } ?: throw GameNotFoundException("Game with id = $gameId not found.", CommandErrorCode.GAME_NOT_FOUND)
     }
 
+    fun getAllActivePlayersApiIds(playerService: PlayerService): List<Long> = activeGames.map {
+        it.players.map { player ->
+            playerService.findById(player.id).apiId
+        }
+    }.flatten()
+
     fun executeCommand(
         gameId: Int,
         command: Command

@@ -20,6 +20,13 @@ class InfoResponseFormer(private val service: PlayerService) {
         )
     )
 
+    fun formPairsApiIdsNames(game: Game): List<Pair<Long, String>> =
+        game.players.map {
+            val player = service.findById(it.id)
+            Pair(player.apiId, player.name)
+        }
+
+
     private fun getPlayersApiIds(
         players: List<ru.tinkoff.resistance.game.Player>,
     ): List<Pair<Long, String>> {
