@@ -20,7 +20,7 @@ import ru.tinkoff.resistance.service.plugin.configureSerialization
 fun main() {
     val config = ConfigFactory.load().extract<AppConfig>()
     migrate(config.dataBase)
-    val engine = embeddedServer(Netty, host = config.http.host, port = config.http.port) {
+    val engine = embeddedServer(Netty, port = config.http.port) {
         di {
             coreComponents(config)
             playerComponents()

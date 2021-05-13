@@ -14,8 +14,9 @@ class InfoResponseFormer(private val service: PlayerService) {
             teammates = getPlayersApiIds(game.teammates.keys.map { game.getPlayerById(it)!! }),
             countFailedMissions = game.getCountFailedMissions(),
             countSuccessedMissions = game.getCountSuccessedMissions(),
-            missionLeader = getPlayerApiIdAndName(game.getLeader()),
+            missionLeader = runCatching { getPlayerApiIdAndName(game.getLeader()) }.getOrElse { Pair(-1L, "") },
             lastMissionResult = game.getLastMissionResult(),
+            Pair(game.getCountSuccessVotes(), game.getCountFailVotes()),
             winner = game.winner
         )
     )

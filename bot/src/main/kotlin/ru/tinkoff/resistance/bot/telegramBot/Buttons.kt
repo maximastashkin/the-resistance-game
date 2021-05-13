@@ -27,11 +27,11 @@ class Buttons {
         val START_GAME = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("Начать игру", "start"),
             InlineKeyboardButton.CallbackData("Покинуть лобби", "leave")
-            )
+        )
 
         fun getTeamingButtons(players: List<Pair<Long, String>>): InlineKeyboardMarkup {
             val buttons = arrayListOf<List<InlineKeyboardButton>>()
-            players.forEach{
+            players.forEach {
                 buttons.add(listOf(InlineKeyboardButton.CallbackData(it.second, "invite ${it.first}")))
             }
             return InlineKeyboardMarkup.create(buttons)

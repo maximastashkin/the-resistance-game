@@ -3,7 +3,7 @@ package ru.tinkoff.resistance.bot.telegramBot
 import ru.tinkoff.resistance.errocodes.CommandErrorCode
 
 fun CommandErrorCode.getMessage(): String =
-    when(this){
+    when (this) {
         CommandErrorCode.ALREADY_IN_GAME -> {
             "Вы уже в игре"
         }

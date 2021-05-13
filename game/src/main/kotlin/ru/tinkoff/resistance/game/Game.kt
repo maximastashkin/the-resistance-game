@@ -108,9 +108,8 @@ class Game(val id: Int, private val hostId: Int, private val hostName: String) {
     /**
      * Удаляет игрока из списка
      * @param playerId идентификатор нового игрока
-     * @param playerName имя нового игрока
      */
-    fun leaveFromLobby(playerId: Int, playerName: String) {
+    fun leaveFromLobby(playerId: Int) {
         players.remove(getPlayerById(playerId))
     }
 
@@ -278,7 +277,7 @@ class Game(val id: Int, private val hostId: Int, private val hostName: String) {
 
         if (isAllDoneMission()) {
             missions[currentMission].missionResult =
-                if (getCountFailMissions() > 0) MissionResult.FAIL else MissionResult.SUCCESS
+                if (getCountFailVotes() > 0) MissionResult.FAIL else MissionResult.SUCCESS
             if (getCountFailedMissions() == 3) {
                 winner = Role.TRAITOR
                 gameState = GameState.END
@@ -311,7 +310,13 @@ class Game(val id: Int, private val hostId: Int, private val hostName: String) {
      * Считает количество саботажных голосов
      * @return количество саботажных голосов
      */
-    private fun getCountFailMissions(): Int = teammates.count { it.value == MissionResult.FAIL }
+    fun getCountFailVotes(): Int = teammates.count { it.value == MissionResult.FAIL }
+
+    /**
+     * Считает количество голосов за успех миссии
+     * @return количество голосов за успех миссии
+     */
+    fun getCountSuccessVotes(): Int = teammates.count { it.value == MissionResult.SUCCESS }
 
     /**
      * Запускает голосование для миссии
@@ -366,6 +371,7 @@ class Game(val id: Int, private val hostId: Int, private val hostName: String) {
     //FOR TESTS
     fun getTraitors(): List<Player> = players.filter { it.isTraitor() }
     fun getLeader(): Player = players[missionLeader]
+
     fun getPlayersToMission(): List<Player> =
         players.filter { it.id != getLeaderId() }.subList(0, missions[currentMission].players - 1)
 

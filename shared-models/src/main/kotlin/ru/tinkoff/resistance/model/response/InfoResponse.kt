@@ -14,5 +14,6 @@ data class InfoResponse(
     val countFailedMissions: Int, val countSuccessedMissions: Int,
     val missionLeader: Pair<Long, String>,
     val lastMissionResult: MissionResult,
+    val lastMissionVotes: Pair<Int, Int>,
     val winner: Role,
 )

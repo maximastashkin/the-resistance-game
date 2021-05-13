@@ -3,13 +3,11 @@ package ru.tinkoff.resistance.bot.telegramBot
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.entities.CallbackQuery
 import com.github.kotlintelegrambot.entities.ChatId
-import com.github.kotlintelegrambot.entities.Message
 import com.github.kotlintelegrambot.entities.ReplyMarkup
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
-import retrofit2.Response
 import ru.tinkoff.resistance.bot.AppConfig
 import ru.tinkoff.resistance.model.game.GameState
 import ru.tinkoff.resistance.model.game.Role
@@ -38,7 +36,7 @@ fun getNames(list: List<Pair<Long, String>>): String {
     return string
 }
 
-fun Bot.joinLobby(players: List<Pair<Long, String>>, lobbyId: Int){
+fun Bot.joinLobby(players: List<Pair<Long, String>>, lobbyId: Int) {
     val newPlayer = players.last()
     val otherPlayers = players - newPlayer
     this.sendMsg(
@@ -50,14 +48,14 @@ fun Bot.joinLobby(players: List<Pair<Long, String>>, lobbyId: Int){
         newPlayer.first,
         "Список игроков в лобби:\n${getNames(otherPlayers)}"
     )
-    otherPlayers.forEach{
+    otherPlayers.forEach {
         this.sendMsg(it.first, "${newPlayer.second} зашел в лобби")
     }
 }
 
-fun Bot.leaveLobby(players: List<Pair<Long, String>>, leaver: Pair<Long, String>){
+fun Bot.leaveLobby(players: List<Pair<Long, String>>, leaver: Pair<Long, String>) {
     this.sendMsg(leaver.first, "Вы успешно покинули лобби", Buttons.START_BUTTONS)
-    players.forEach{
+    players.forEach {
         this.sendMsg(it.first, "${leaver.second} покинул лобби")
     }
 }
@@ -83,7 +81,7 @@ fun Bot.startGame(infoResponse: InfoResponse) {
     }
     this.sendMsg(
         leader.first, "Вы лидер. Набирайте команду",
-        Buttons.getTeamingButtons(players-leader)
+        Buttons.getTeamingButtons(players - leader)
     )
 }
 
@@ -186,7 +184,7 @@ fun Bot.mission(infoResponse: InfoResponse, client: HttpClient, config: AppConfi
     }
 }
 
-fun Bot.gameOver(infoResponse: InfoResponse, client: HttpClient, config: AppConfig){
+fun Bot.gameOver(infoResponse: InfoResponse, client: HttpClient, config: AppConfig) {
     val traitors = infoResponse.traitors
     val notTraitors = infoResponse.notTraitors
     val players = traitors + notTraitors
@@ -222,8 +220,8 @@ fun Bot.sendResults(winners: List<Pair<Long, String>>, losers: List<Pair<Long, S
     }
 }
 
-fun closeGame(apiId: Long, client: HttpClient, config: AppConfig){
+fun closeGame(apiId: Long, client: HttpClient, config: AppConfig) {
     runBlocking {
-        client.delete<HttpResponse>(config.server.url + "game/close/$apiId")
+        client.get<HttpResponse>(config.server.url + config.server.closeRoute + "/$apiId")
     }
 }

@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "ru.tinkoff"
-version = "1.0"
+version = "0.0.1"
 
 repositories {
     mavenLocal()
@@ -57,7 +57,7 @@ tasks.withType<KotlinCompile> {
 
 tasks {
     named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-        archiveBaseName.set("game")
+        archiveBaseName.set("service")
         mergeServiceFiles()
         manifest {
             attributes(mapOf("Main-Class" to "ru.tinkoff.resistance.service.AppKt"))

@@ -6,7 +6,6 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.pipeline.*
-import kotlinx.coroutines.joinAll
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
@@ -143,9 +142,9 @@ fun Application.gameModule() {
                 if (apiId != null) {
                     val player = playerService.findByApiId(apiId)
                     val command = EarlyFinishGameCommand(player.id, player.name)
+                    respond(controller.getInfoResponse(player.currentGameId, infoResponseFormer))
                     controller.executeCommand(player.currentGameId, command)
                     controller.closeGame(playerService.findByApiId(apiId).currentGameId, service, playerService)
-                    call.respond(HttpStatusCode.OK)
                 } else {
                     call.respond(HttpStatusCode.BadRequest)
                 }
