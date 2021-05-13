@@ -138,7 +138,7 @@ fun Application.gameModule() {
             }
         }
         route("/game/close/{apiId}") {
-            delete {
+            get {
                 val apiId = call.parameters["apiId"]?.toLong()
                 if (apiId != null) {
                     val player = playerService.findByApiId(apiId)

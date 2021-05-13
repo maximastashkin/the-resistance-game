@@ -3,11 +3,13 @@ package ru.tinkoff.resistance.bot.telegramBot
 import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.entities.CallbackQuery
 import com.github.kotlintelegrambot.entities.ChatId
+import com.github.kotlintelegrambot.entities.Message
 import com.github.kotlintelegrambot.entities.ReplyMarkup
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
+import retrofit2.Response
 import ru.tinkoff.resistance.bot.AppConfig
 import ru.tinkoff.resistance.model.game.GameState
 import ru.tinkoff.resistance.model.game.Role
@@ -21,13 +23,12 @@ fun Bot.deleteLastMsg(callbackQuery: CallbackQuery) {
     )
 }
 
-fun Bot.sendMsg(chatId: Long, text: String, replyMarkup: ReplyMarkup? = null) {
+fun Bot.sendMsg(chatId: Long, text: String, replyMarkup: ReplyMarkup? = null) =
     this.sendMessage(
         chatId = ChatId.fromId(chatId),
         text = text,
         replyMarkup = replyMarkup
     )
-}
 
 fun getNames(list: List<Pair<Long, String>>): String {
     var string = ""
