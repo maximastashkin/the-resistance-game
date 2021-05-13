@@ -14,5 +14,13 @@ data class TelegramConfig(
     )
 
 data class ServerConfig(
-    val url: String
+    val url: String,
+    val startRoute: String,
+    val createRoute: String,
+    val joinRoute: String,
+    val leaveRoute: String,
+    val gameStartRoute: String,
+    val choosePlayerForMission: String,
+    val voteForTeam: String,
+    val missionAction: String
     )

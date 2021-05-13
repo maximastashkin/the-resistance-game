@@ -25,7 +25,7 @@ fun main() {
         configureExceptionHandler(config.server, client)
         bot.startWebhook()
         requestModule(bot)
-        pingClient(config.server, client, bot)
+//        pingClient(config.server, client, bot)
     }
     engine.start()
 }

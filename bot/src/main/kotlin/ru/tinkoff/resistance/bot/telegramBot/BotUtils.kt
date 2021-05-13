@@ -38,6 +38,30 @@ fun getNames(list: List<Pair<Long, String>>): String {
     return string
 }
 
+fun Bot.joinLobby(players: List<Pair<Long, String>>, lobbyId: Int){
+    val newPlayer = players.last()
+    val otherPlayers = players - newPlayer
+    this.sendMsg(
+        newPlayer.first,
+        "Вы успешно зашли в игру. Номер игры: $lobbyId",
+        Buttons.LOBBY_BUTTONS
+    )
+    this.sendMsg(
+        newPlayer.first,
+        "Список игроков в лобби:\n${getNames(otherPlayers)}"
+    )
+    otherPlayers.forEach{
+        this.sendMsg(it.first, "${newPlayer.second} зашел в лобби")
+    }
+}
+
+fun Bot.leaveLobby(players: List<Pair<Long, String>>, leaver: Pair<Long, String>){
+    this.sendMsg(leaver.first, "Вы успешно покинули лобби", Buttons.START_BUTTONS)
+    players.forEach{
+        this.sendMsg(it.first, "${leaver.second} покинул лобби")
+    }
+}
+
 fun Bot.startGame(infoResponse: InfoResponse) {
     val traitors = infoResponse.traitors
     val notTraitors = infoResponse.notTraitors

@@ -28,7 +28,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
         dispatch {
             command("start") {
                 runBlocking {
-                    val response = client.post<HttpResponse>(config.server.url + "player") {
+                    val response = client.post<HttpResponse>(config.server.url + config.server.startRoute) {
                         method = HttpMethod.Post
                         contentType(ContentType.Application.Json)
                         body = PlayerCreateRequest(message.chat.id, message.from!!.firstName)
@@ -50,7 +50,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
             callbackQuery("create") {
                 val id = callbackQuery.from.id
                 runBlocking {
-                    val response = client.post<HttpResponse>(config.server.url + "game/create") {
+                    val response = client.post<HttpResponse>(config.server.url + config.server.createRoute) {
                         method = HttpMethod.Post
                         contentType(ContentType.Application.Json)
                         body = CreateGameRequest(id)
@@ -86,18 +86,15 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                     try {
                         val lobbyId = strings[1].toInt()
                         runBlocking {
-                            val response = client.post<HttpResponse>(config.server.url + "game/join") {
+                            val response = client.post<HttpResponse>(config.server.url + config.server.joinRoute) {
                                 method = HttpMethod.Post
                                 contentType(ContentType.Application.Json)
                                 body = JoinGameRequest(message.chat.id, lobbyId)
                             }
                             when (response.status) {
                                 HttpStatusCode.OK -> {
-                                    bot.sendMsg(
-                                        message.chat.id,
-                                        "Вы успешно зашли в игру. Номер игры: $lobbyId",
-                                        Buttons.LOBBY_BUTTONS
-                                    )
+                                    val players = response.receive<List<Pair<Long, String>>>()
+                                    bot.joinLobby(players, lobbyId)
                                 }
                                 HttpStatusCode.InternalServerError -> {
                                     val commandErrorCode = response.receive<CommandErrorCode>()
@@ -121,13 +118,14 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
             callbackQuery("leave") {
                 val id = callbackQuery.from.id
                 runBlocking {
-                    val response = client.get<HttpResponse>(config.server.url + "game/leave/$id") {
+                    val response = client.get<HttpResponse>(config.server.url + config.server.leaveRoute + id) {
                         method = HttpMethod.Get
                         contentType(ContentType.Application.Json)
                     }
                     when (response.status) {
                         HttpStatusCode.OK -> {
-                            bot.sendMsg(id, "Вы успешно покинули лоби", Buttons.START_BUTTONS)
+                            val players = response.receive<List<Pair<Long, String>>>()
+                            bot.leaveLobby(players, Pair(id, callbackQuery.from.firstName))
                             bot.deleteLastMsg(callbackQuery)
                         }
                         HttpStatusCode.InternalServerError -> {
@@ -147,7 +145,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
             callbackQuery("start") {
                 val id = callbackQuery.from.id
                 runBlocking {
-                    val response = client.get<HttpResponse>(config.server.url + "game/start/$id") {
+                    val response = client.get<HttpResponse>(config.server.url + config.server.gameStartRoute + id) {
                         method = HttpMethod.Get
                         contentType(ContentType.Application.Json)
                     }
@@ -178,7 +176,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                 val candidateId = callbackQuery.data.split(" ")[1].toLong()
                 runBlocking {
                     val response =
-                        client.post<HttpResponse>(config.server.url + "game/chooseplayerformission") {
+                        client.post<HttpResponse>(config.server.url + config.server.choosePlayerForMission) {
                             method = HttpMethod.Post
                             contentType(ContentType.Application.Json)
                             body = ChoosePlayerForMissionRequest(id, candidateId)
@@ -205,7 +203,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                 val answer = callbackQuery.data == "voteYes"
                 val id = callbackQuery.from.id
                 runBlocking {
-                    val response = client.post<HttpResponse>(config.server.url + "game/voteforteam") {
+                    val response = client.post<HttpResponse>(config.server.url + config.server.voteForTeam) {
                         method = HttpMethod.Post
                         contentType(ContentType.Application.Json)
                         body = VoteForTeamRequest(id, answer)
@@ -231,7 +229,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                 val answer = callbackQuery.data == "missionSuccess"
                 val id = callbackQuery.from.id
                 runBlocking {
-                    val response = client.post<HttpResponse>(config.server.url + "game/missionaction") {
+                    val response = client.post<HttpResponse>(config.server.url + config.server.missionAction) {
                         method = HttpMethod.Post
                         contentType(ContentType.Application.Json)
                         body = MissionActionRequest(id, answer)
