@@ -47,11 +47,6 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                 }
             }
 
-            callbackQuery("rules"){
-                val id = callbackQuery.from.id
-                bot.sendMsg(id, "Тут будут правила")
-            }
-
             callbackQuery("create") {
                 val id = callbackQuery.from.id
                 runBlocking {
