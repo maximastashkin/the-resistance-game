@@ -13,6 +13,7 @@ import org.kodein.di.ktor.closestDI
 import org.kodein.di.singleton
 import ru.tinkoff.resistance.errocodes.CommandErrorCode
 import ru.tinkoff.resistance.game.commands.*
+import ru.tinkoff.resistance.model.game.GameState
 import ru.tinkoff.resistance.model.request.*
 import ru.tinkoff.resistance.model.response.InfoResponse
 import ru.tinkoff.resistance.service.game.controller.GameController
@@ -62,7 +63,8 @@ fun Application.gameModule() {
                 if (apiId != null) {
                     val player = playerService.findByApiId(apiId)
                     val command = LeaveFromLobbyCommand(player.id, player.name)
-                    controller.executeCommand(
+                    val hostId = playerService.findById(controller.getGameById(player.currentGameId).hostId).apiId
+                    val game = controller.executeCommand(
                         player.currentGameId,
                         command
                     )
@@ -70,8 +72,10 @@ fun Application.gameModule() {
                         playerService.update(id, apiId, name, -1)
                     }
                     call.respond(
-                        HttpStatusCode.OK,
-                        infoResponseFormer.formPairsApiIdsNames(controller.getGameById(player.currentGameId))
+                        HttpStatusCode.OK, Pair(
+                            infoResponseFormer.formPairsApiIdsNames(controller.getGameById(player.currentGameId)),
+                            apiId == hostId
+                        )
                     )
                 } else {
                     call.respond(HttpStatusCode.BadRequest)

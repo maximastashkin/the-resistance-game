@@ -24,6 +24,10 @@ class Buttons {
             InlineKeyboardButton.CallbackData("Фейл", "missionFail"),
         )
 
+        val MISSION_FOR_NOT_TRAITORS = InlineKeyboardMarkup.createSingleRowKeyboard(
+            InlineKeyboardButton.CallbackData("Успех", "missionSuccess")
+        )
+
         val START_GAME = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("Начать игру", "start"),
             InlineKeyboardButton.CallbackData("Покинуть лобби", "leave")

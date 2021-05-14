@@ -18,6 +18,10 @@ class LeaveFromLobbyCommand(override val senderId: Int, override val senderName:
                 CommandErrorCode.LEAVE_FROM_LOBBY_IN_NOT_LOBBY_STATE
             )
         }
-        game.leaveFromLobby(senderId)
+        if (game.isHost(senderId)) {
+            game.earlyFinishGame()
+        } else {
+            game.leaveFromLobby(senderId)
+        }
     }
 }

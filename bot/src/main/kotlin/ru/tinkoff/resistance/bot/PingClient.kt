@@ -22,7 +22,6 @@ fun Application.pingClient(config: AppConfig, client: HttpClient, bot: Bot) {
             val ids: List<Long> = client
                 .get<HttpResponse>(config.server.url + "game/getallactiveusers")
                 .receive()
-            println(ids)
             pingIds(ids, config, client, bot)
         }
     }
@@ -32,7 +31,6 @@ suspend fun pingIds(ids: List<Long>, config: AppConfig, client: HttpClient, bot:
     ids.forEach {
         val message = bot.sendMsg(it, "Test connection", null)
         if (message.first?.isSuccessful != true) {
-            println(config.server.url + config.server.closeRoute + "/$it")
             val infoResponse =
                 client.get<HttpResponse>(config.server.url + config.server.closeRoute + "/$it").receive<InfoResponse>()
             bot.gameOver(infoResponse, client, config)

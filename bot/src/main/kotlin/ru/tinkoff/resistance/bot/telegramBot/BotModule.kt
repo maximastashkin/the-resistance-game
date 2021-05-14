@@ -124,7 +124,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                     }
                     when (response.status) {
                         HttpStatusCode.OK -> {
-                            val players = response.receive<List<Pair<Long, String>>>()
+                            val players = response.receive<Pair<List<Pair<Long, String>>, Boolean>>()
                             bot.leaveLobby(players, Pair(id, callbackQuery.from.firstName))
                             bot.deleteLastMsg(callbackQuery)
                         }

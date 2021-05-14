@@ -12,11 +12,14 @@ class InfoResponseFormer(private val service: PlayerService) {
             notTraitors = getPlayersApiIds(game.getNotTraitors()),
             traitors = getPlayersApiIds(game.getTraitors()),
             teammates = getPlayersApiIds(game.teammates.keys.map { game.getPlayerById(it)!! }),
+            votesResults = game.votes.map {
+                Pair(service.findById(it.key).name, it.value)
+            },
             countFailedMissions = game.getCountFailedMissions(),
             countSuccessedMissions = game.getCountSuccessedMissions(),
             missionLeader = runCatching { getPlayerApiIdAndName(game.getLeader()) }.getOrElse { Pair(-1L, "") },
             lastMissionResult = game.getLastMissionResult(),
-            Pair(game.getCountSuccessVotes(), game.getCountFailVotes()),
+            lastMissionVotes = Pair(game.getCountPrevSuccessVotes(), game.getCountPrevFailVotes()),
             winner = game.winner
         )
     )

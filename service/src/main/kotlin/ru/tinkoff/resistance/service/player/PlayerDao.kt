@@ -22,12 +22,16 @@ class PlayerDao(private val db: Database) {
     }
 
     fun create(apiId: Long, name: String, currentGameId: Int): Player = transaction(db) {
-        val id = Players.insertAndGetId {
-            it[Players.apiId] = apiId
-            it[Players.name] = name
-            it[Players.currentGameId] = currentGameId
+        runCatching {
+            val id = Players.insertAndGetId {
+                it[Players.apiId] = apiId
+                it[Players.name] = name
+                it[Players.currentGameId] = currentGameId
+            }
+            Player(id.value, apiId, name, currentGameId)
+        }.getOrElse {
+            Player(-1, -1, "", -1)
         }
-        Player(id.value, apiId, name, currentGameId)
     }
 
     fun update(id: Int, apiId: Long, name: String, currentGameId: Int): Int = transaction(db) {

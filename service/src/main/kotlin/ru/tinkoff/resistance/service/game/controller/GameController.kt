@@ -3,6 +3,7 @@ package ru.tinkoff.resistance.service.game.controller
 import ru.tinkoff.resistance.errocodes.CommandErrorCode
 import ru.tinkoff.resistance.game.Game
 import ru.tinkoff.resistance.game.commands.Command
+import ru.tinkoff.resistance.game.commands.LeaveFromLobbyCommand
 import ru.tinkoff.resistance.model.game.GameState
 import ru.tinkoff.resistance.service.game.InfoResponseFormer
 import ru.tinkoff.resistance.service.game.GameService
@@ -32,9 +33,17 @@ class GameController {
     fun executeCommand(
         gameId: Int,
         command: Command
-    ) {
+    ): Game {
         val game = getGameById(gameId)
         game.executeCommand(command)
+        return game
+    }
+
+    fun hostLeave(gameId: Int, gameService: GameService, playerService: PlayerService) {
+        val game = getGameById(gameId)
+        if (game.gameState == GameState.END) {
+            closeGame(gameId, gameService, playerService)
+        }
     }
 
     fun closeGame(

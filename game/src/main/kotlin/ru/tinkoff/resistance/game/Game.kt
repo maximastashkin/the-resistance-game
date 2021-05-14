@@ -7,6 +7,7 @@ import kotlinx.serialization.json.Json
 import ru.tinkoff.resistance.model.game.GameState
 import ru.tinkoff.resistance.model.game.MissionResult
 import ru.tinkoff.resistance.model.game.Role
+import ru.tinkoff.resistance.model.game.VoteResult
 import kotlin.properties.Delegates
 import kotlin.random.Random
 
@@ -25,12 +26,13 @@ import kotlin.random.Random
  * @property currentMission номер текущей миссии
  * @property failedVotes количество неудавшихся наборов игроков для миссии
  * @property teammates список игроков, которые участвуют в текущей миссии
+ * @property prevTeammates список игроков, которые участвовали в предыдущей миссии
  * @property votes список голосов за выбранную лидером команду
  *
  * @constructor добавляет в список игроков создателя сессии
  */
 @Serializable
-class Game(val id: Int, private val hostId: Int, private val hostName: String) {
+class Game(val id: Int, val hostId: Int, private val hostName: String) {
 
     var players: MutableList<Player> = mutableListOf()
     private var missions: List<Mission> = emptyList()
@@ -50,7 +52,8 @@ class Game(val id: Int, private val hostId: Int, private val hostName: String) {
     var failedVotes = -1
 
     var teammates = mutableMapOf<Int, MissionResult>()
-    private var votes = mutableMapOf<Int, VoteResult>()
+    var prevTeammates = mutableMapOf<Int, MissionResult>()
+    var votes = mutableMapOf<Int, VoteResult>()
 
     init {
         addPlayer(hostId, hostName)
@@ -195,6 +198,7 @@ class Game(val id: Int, private val hostId: Int, private val hostName: String) {
         nextLeaderId()
         failedVotes++
         gameState = GameState.TEAMING
+        prevTeammates = teammates
         teammates = mutableMapOf()
         teammates[players[missionLeader].id] = MissionResult.NONE
 
@@ -246,7 +250,7 @@ class Game(val id: Int, private val hostId: Int, private val hostName: String) {
     }
 
     /**
-     * Устанавливает словарь (playerID - ru.tinkoff.resistance.game.VoteResult) в исходное состояние (никто не проголосовал)
+     * Устанавливает словарь (playerID - ru.tinkoff.resistance.model.game.VoteResult) в исходное состояние (никто не проголосовал)
      */
     private fun setAllVotesToUnvoted() {
         for (key in votes.keys) {
@@ -313,10 +317,16 @@ class Game(val id: Int, private val hostId: Int, private val hostName: String) {
     fun getCountFailVotes(): Int = teammates.count { it.value == MissionResult.FAIL }
 
     /**
-     * Считает количество голосов за успех миссии
+     * Считает количество саботажных голосов за предыдущую миссию
+     * @return количество саботажных голосов
+     */
+    fun getCountPrevFailVotes(): Int = prevTeammates.count { it.value == MissionResult.FAIL }
+
+    /**
+     * Считает количество голосов за успех предыдущей миссии
      * @return количество голосов за успех миссии
      */
-    fun getCountSuccessVotes(): Int = teammates.count { it.value == MissionResult.SUCCESS }
+    fun getCountPrevSuccessVotes(): Int = prevTeammates.count { it.value == MissionResult.SUCCESS }
 
     /**
      * Запускает голосование для миссии
