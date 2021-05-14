@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "ru.tinkoff"
-version = "1.0"
+version = "0.0.1"
 
 repositories {
     mavenLocal()
@@ -38,6 +38,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
     implementation("org.postgresql:postgresql:$postgres_version")
     implementation("org.flywaydb:flyway-core:$flyway_version")
     implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodein_version")
@@ -56,7 +57,7 @@ tasks.withType<KotlinCompile> {
 
 tasks {
     named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-        archiveBaseName.set("game")
+        archiveBaseName.set("service")
         mergeServiceFiles()
         manifest {
             attributes(mapOf("Main-Class" to "ru.tinkoff.resistance.service.AppKt"))

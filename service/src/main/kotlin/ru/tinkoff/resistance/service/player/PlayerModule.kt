@@ -10,20 +10,20 @@ import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.kodein.di.singleton
-import ru.tinkoff.resistance.requests.models.player.PlayerCreateRequest
+import ru.tinkoff.resistance.model.request.PlayerCreateRequest
 
 fun Application.playerModule() {
     val service: PlayerService by closestDI().instance()
     routing {
-        route ("/player") {
+        route("/player") {
             post {
                 val request = call.receive<PlayerCreateRequest>()
                 runCatching {
-                    service.create(request.apiId, request.name, null)
+                    service.create(request.apiId, request.name, -1)
                 }.onSuccess {
-                    call.respond(it)
+                    call.respond(HttpStatusCode.Created)
                 }.onFailure {
-                    call.respond(HttpStatusCode.NotAcceptable)
+                    call.respond(HttpStatusCode.InternalServerError)
                 }
             }
         }
@@ -32,5 +32,5 @@ fun Application.playerModule() {
 
 fun DI.Builder.playerComponents() {
     bind<PlayerDao>() with singleton { PlayerDao(instance()) }
-    bind<PlayerService>() with singleton {PlayerService(instance(), instance())}
+    bind<PlayerService>() with singleton { PlayerService(instance(), instance()) }
 }

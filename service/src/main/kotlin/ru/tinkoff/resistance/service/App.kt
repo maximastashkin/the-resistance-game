@@ -1,7 +1,5 @@
 package ru.tinkoff.resistance.service
 
-import AppConfig
-import DataBaseConfig
 import com.typesafe.config.ConfigFactory
 import io.github.config4k.extract
 import io.ktor.server.engine.*
@@ -16,18 +14,20 @@ import ru.tinkoff.resistance.service.game.gameComponents
 import ru.tinkoff.resistance.service.game.gameModule
 import ru.tinkoff.resistance.service.player.playerComponents
 import ru.tinkoff.resistance.service.player.playerModule
+import ru.tinkoff.resistance.service.plugin.configureExceptionHandler
 import ru.tinkoff.resistance.service.plugin.configureSerialization
 
 fun main() {
     val config = ConfigFactory.load().extract<AppConfig>()
     migrate(config.dataBase)
-    val engine = embeddedServer(Netty, host = config.http.host, port = config.http.port) {
+    val engine = embeddedServer(Netty, port = config.http.port) {
         di {
             coreComponents(config)
             playerComponents()
             gameComponents()
         }
         configureSerialization()
+        configureExceptionHandler()
         playerModule()
         gameModule()
     }
@@ -51,7 +51,8 @@ fun migrate(dataBaseConfig: DataBaseConfig) {
         .dataSource(
             dataBaseConfig.url,
             dataBaseConfig.user,
-            dataBaseConfig.password)
+            dataBaseConfig.password
+        )
         .load()
         .migrate()
 }

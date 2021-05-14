@@ -1,4 +1,4 @@
-package ru.tinkoff.resistance.game.commands
+package ru.tinkoff.resistance.errocodes
 
 enum class CommandErrorCode(num: Int) {
     ENTER_TO_STARTED_GAME(0),
@@ -15,4 +15,7 @@ enum class CommandErrorCode(num: Int) {
     DO_MISSION_IN_NOT_MISSION_STATE(11),
     PLAYER_DONT_DO_MISSION(12),
     ALREADY_DONE_MISSION(13),
+    GAME_NOT_FOUND(14),
+    PLAYER_NOT_IN_GAME(15),
+    LEAVE_FROM_LOBBY_IN_NOT_LOBBY_STATE(16),
 }

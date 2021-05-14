@@ -1,4 +1,4 @@
-package ru.tinkoff.resistance.requests.models.game
+package ru.tinkoff.resistance.model.request
 
 import kotlinx.serialization.Serializable
 

@@ -11,13 +11,22 @@ class PlayerService(
 
     fun findById(id: Int): Player = dao.findById(id)
 
-    fun findByApiId(apiId: Long): Player = dao.findByApiId(apiId)
+    fun findByApiId(apiId: Long): Player {
+        runCatching {
+            dao.findByApiId(apiId)
+        }.onSuccess {
+            return it
+        }.onFailure {
+            throw PlayerNotFoundException(apiId)
+        }
+        return Player(-1, -1, "", -1)
+    }
 
-    fun create(apiId: Long, name: String, currentGameId: Int?): Player = transaction(db) {
+    fun create(apiId: Long, name: String, currentGameId: Int): Player = transaction(db) {
         dao.create(apiId, name, currentGameId)
     }
 
-    fun update(id: Int, telegramId: Long, name: String, currentGameId: Int?): Int = transaction(db) {
+    fun update(id: Int, telegramId: Long, name: String, currentGameId: Int): Int = transaction(db) {
         dao.update(id, telegramId, name, currentGameId)
     }
 

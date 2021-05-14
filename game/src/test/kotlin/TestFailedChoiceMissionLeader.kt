@@ -4,8 +4,8 @@ import ru.tinkoff.resistance.game.commands.StartGameCommand
 import ru.tinkoff.resistance.game.commands.VoteForTeamCommand
 import org.junit.jupiter.api.Test
 import ru.tinkoff.resistance.game.Game
-import ru.tinkoff.resistance.game.GameState
-import ru.tinkoff.resistance.game.Role
+import ru.tinkoff.resistance.model.game.GameState
+import ru.tinkoff.resistance.model.game.Role
 
 class TestFailedChoiceMissionLeader {
 
@@ -31,9 +31,9 @@ class TestFailedChoiceMissionLeader {
         assert(game.gameState == GameState.TEAMING)
 
         repeat(5) {
-            var playersToMission = game.getPlayersToMission()
-            var playersExcludeLeader = game.getPlayersExcludeLeader()
-            var leader = game.getLeader()
+            val playersToMission = game.getPlayersToMission()
+            val playersExcludeLeader = game.getPlayersExcludeLeader()
+            val leader = game.getLeader()
 
             playersToMission.forEach {
                 game.executeCommand(ChoosePlayerForMissionCommand(leader.id, leader.name, it.id))
