@@ -47,6 +47,11 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                 }
             }
 
+            callbackQuery("rules"){
+                val id = callbackQuery.from.id
+                bot.sendMsg(id, "Тут будут правила")
+            }
+
             callbackQuery("create") {
                 val id = callbackQuery.from.id
                 runBlocking {
@@ -76,11 +81,12 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
             }
 
             callbackQuery("join") {
-                this.bot.sendMsg(callbackQuery.from.id, "Введите id игры /join id")
+                this.bot.sendMsg(callbackQuery.from.id, "Введите команду /join id, чтобы зайти в лобби")
                 bot.deleteLastMsg(callbackQuery)
             }
 
             command("join") {
+                val id = message.chat.id
                 val strings = message.text!!.split(" ")
                 if (strings.size == 2) {
                     try {
@@ -89,12 +95,13 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                             val response = client.post<HttpResponse>(config.server.url + config.server.joinRoute) {
                                 method = HttpMethod.Post
                                 contentType(ContentType.Application.Json)
-                                body = JoinGameRequest(message.chat.id, lobbyId)
+                                body = JoinGameRequest(id, lobbyId)
                             }
                             when (response.status) {
                                 HttpStatusCode.OK -> {
+                                    bot.sendMsg(id, "Вы успешно зашли в игру. Номер игры: $lobbyId", Buttons.LOBBY_BUTTONS)
                                     val players = response.receive<List<Pair<Long, String>>>()
-                                    bot.joinLobby(players, lobbyId)
+                                    bot.joinLobby(players)
                                 }
                                 HttpStatusCode.InternalServerError -> {
                                     val commandErrorCode = response.receive<CommandErrorCode>()
@@ -111,7 +118,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                         bot.sendMsg(message.chat.id, "Неправильный ID игры")
                     }
                 } else {
-                    bot.sendMsg(message.chat.id, "Команда введена не правильно")
+                    bot.sendMsg(message.chat.id, "Команда введена не верно. Пример команды: /join 1")
                 }
             }
 
@@ -124,6 +131,7 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                     }
                     when (response.status) {
                         HttpStatusCode.OK -> {
+                            bot.sendMsg(id, "Вы успешно покинули лобби", Buttons.START_BUTTONS)
                             val players = response.receive<Pair<List<Pair<Long, String>>, Boolean>>()
                             bot.leaveLobby(players, Pair(id, callbackQuery.from.firstName))
                             bot.deleteLastMsg(callbackQuery)
@@ -183,9 +191,9 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                         }
                     when (response.status) {
                         HttpStatusCode.OK -> {
+                            bot.deleteLastMsg(callbackQuery)
                             val infoResponse = response.receive<InfoResponse>()
                             bot.choosePlayer(infoResponse)
-                            bot.deleteLastMsg(callbackQuery)
                         }
                         HttpStatusCode.NotFound -> {
                             bot.sendMsg(id, "Игрок не найден в базе")
@@ -210,9 +218,9 @@ fun botModule(config: AppConfig, client: HttpClient): Bot {
                     }
                     when (response.status) {
                         HttpStatusCode.OK -> {
+                            bot.deleteLastMsg(callbackQuery)
                             val infoResponse = response.receive<InfoResponse>()
                             bot.voteForTeam(infoResponse, client, config)
-                            bot.deleteLastMsg(callbackQuery)
                         }
                         HttpStatusCode.InternalServerError -> {
                             val commandErrorCode = response.receive<CommandErrorCode>()

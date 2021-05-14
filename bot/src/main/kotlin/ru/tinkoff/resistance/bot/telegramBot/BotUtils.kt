@@ -10,7 +10,9 @@ import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
 import ru.tinkoff.resistance.bot.AppConfig
 import ru.tinkoff.resistance.model.game.GameState
+import ru.tinkoff.resistance.model.game.MissionResult
 import ru.tinkoff.resistance.model.game.Role
+import ru.tinkoff.resistance.model.game.VoteResult
 import ru.tinkoff.resistance.model.response.InfoResponse
 
 
@@ -28,39 +30,35 @@ fun Bot.sendMsg(chatId: Long, text: String, replyMarkup: ReplyMarkup? = null) =
         replyMarkup = replyMarkup
     )
 
-fun getNames(list: List<Pair<Long, String>>): String {
+fun getPlayersNames(players: List<Pair<Long, String>>): String {
     var string = ""
-    list.forEach {
+    players.forEach {
         string += it.second + "\n"
     }
     return string
 }
 
-fun Bot.joinLobby(players: List<Pair<Long, String>>, lobbyId: Int) {
+fun Bot.joinLobby(players: List<Pair<Long, String>>) {
     val newPlayer = players.last()
     val otherPlayers = players - newPlayer
     this.sendMsg(
         newPlayer.first,
-        "Вы успешно зашли в игру. Номер игры: $lobbyId",
-        Buttons.LOBBY_BUTTONS
-    )
-    this.sendMsg(
-        newPlayer.first,
-        "Список игроков в лобби:\n${getNames(otherPlayers)}"
+        "Список игроков в лобби:\n${getPlayersNames(otherPlayers)}"
     )
     otherPlayers.forEach {
         this.sendMsg(it.first, "${newPlayer.second} зашел в лобби")
     }
 }
 
-fun Bot.leaveLobby(players: Pair<List<Pair<Long, String>>, Boolean>, leaver: Pair<Long, String>) {
-    this.sendMsg(leaver.first, "Вы успешно покинули лобби", Buttons.START_BUTTONS)
-    players.first.forEach {
+fun Bot.leaveLobby(leaveInfo: Pair<List<Pair<Long, String>>, Boolean>, leaver: Pair<Long, String>) {
+    val players = leaveInfo.first
+    val isHost = leaveInfo.second
+    players.forEach {
         this.sendMsg(it.first, "${leaver.second} покинул лобби")
     }
-    if(players.second){
-        players.first.forEach{
-            this.sendMsg(it.first, "Хост покинул лобби", Buttons.START_BUTTONS)
+    if (isHost) {
+        players.forEach {
+            this.sendMsg(it.first, "Игра отменяется, так как хост покинул лобби", Buttons.START_BUTTONS)
         }
     }
 }
@@ -70,20 +68,24 @@ fun Bot.startGame(infoResponse: InfoResponse) {
     val notTraitors = infoResponse.notTraitors
     val players = (traitors + notTraitors).shuffled()
     val leader = infoResponse.missionLeader
-    val playerNames = "Список игроков: \n${getNames(players)}"
+    val playerNames = "Список игроков: \n${getPlayersNames(players)}"
     val leaderInfo = "Лидер первого раунда ${leader.second}."
     players.forEach {
         this.sendMsg(it.first, playerNames)
         this.sendMsg(it.first, leaderInfo)
     }
-    val traitorsNames = "Список предателей: \n${getNames(traitors)}"
+    val traitorsNames = "Список предателей: \n${getPlayersNames(traitors)}"
     traitors.forEach {
-        this.sendMsg(it.first, "Вы предатель.")
+        this.sendMsg(it.first, "Вы предатель")
         this.sendMsg(it.first, traitorsNames)
     }
     notTraitors.forEach {
-        this.sendMsg(it.first, "Вы сопротивленец.")
+        this.sendMsg(it.first, "Вы в сопротивлении")
     }
+    this.notifyLeader(leader, players)
+}
+
+fun Bot.notifyLeader(leader: Pair<Long, String>, players: List<Pair<Long, String>>) {
     this.sendMsg(
         leader.first, "Вы лидер. Набирайте команду",
         Buttons.getTeamingButtons(players - leader)
@@ -95,23 +97,19 @@ fun Bot.choosePlayer(infoResponse: InfoResponse) {
     val leaderId = infoResponse.missionLeader.first
     val notTraitors = infoResponse.notTraitors
     val teammates = infoResponse.teammates
-    val teammatesNames = "Список игроков на миссию: \n${getNames(teammates)}"
-
+    val teammatesNames = "Список игроков на миссию: \n${getPlayersNames(teammates)}"
     when (infoResponse.gameState) {
         GameState.TEAMING -> {
-            val players = traitors + notTraitors - teammates
+            val players = (traitors + notTraitors - teammates).shuffled()
             this.sendMsg(
                 leaderId,
-                "Игрок успешно выбран.\n $teammatesNames",
-                Buttons.getTeamingButtons(players.shuffled())
+                "Игрок успешно выбран\n $teammatesNames",
+                Buttons.getTeamingButtons(players)
             )
         }
         GameState.VOTING -> {
-            val players = traitors + notTraitors
-            this.sendMsg(
-                leaderId,
-                "Последний игрок успешно выбран."
-            )
+            val players = (traitors + notTraitors).shuffled()
+            this.sendMsg(leaderId, "Последний игрок успешно выбран")
             players.forEach {
                 this.sendMsg(it.first, teammatesNames)
                 this.sendMsg(it.first, "Ваше мнение?", Buttons.VOTING_BUTTONS)
@@ -128,14 +126,14 @@ fun Bot.voteForTeam(infoResponse: InfoResponse, client: HttpClient, config: AppC
     val leader = infoResponse.missionLeader
     val notTraitors = infoResponse.notTraitors
     val teammates = infoResponse.teammates
-    val players = traitors + notTraitors
+    val players = (traitors + notTraitors).shuffled()
     val votes = infoResponse.votesResults.shuffled()
+    if (infoResponse.gameState != GameState.VOTING) {
+        this.sendPlayersVotes(players, votes)
+    }
     when (infoResponse.gameState) {
         GameState.MISSION -> {
             players.forEach {
-                votes.forEach{ el ->
-                    this.sendMsg(it.first, "${el.first} проголосовал ${el.second}")
-                }
                 this.sendMsg(it.first, "Голосование закончилось успешно")
                 this.sendMsg(it.first, "Миссия начинается")
             }
@@ -149,16 +147,10 @@ fun Bot.voteForTeam(infoResponse: InfoResponse, client: HttpClient, config: AppC
         }
         GameState.TEAMING -> {
             players.forEach {
-                votes.forEach{ el ->
-                    this.sendMsg(it.first, "${el.first} проголосовал ${el.second}")
-                }
                 this.sendMsg(it.first, "Голосование решило поменять команду")
                 this.sendMsg(it.first, "Новый лидер: ${leader.second}")
             }
-            this.sendMsg(
-                leader.first, "Вы лидер. Набирайте команду",
-                Buttons.getTeamingButtons((players - leader).shuffled())
-            )
+            this.notifyLeader(leader, players)
         }
         GameState.END -> {
             players.forEach {
@@ -169,45 +161,84 @@ fun Bot.voteForTeam(infoResponse: InfoResponse, client: HttpClient, config: AppC
     }
 }
 
+fun Bot.sendPlayersVotes(players: List<Pair<Long, String>>, votes: List<Pair<String, VoteResult>>) {
+    players.forEach {
+        votes.forEach { el ->
+            when (el.second) {
+                VoteResult.AGREE -> {
+                    this.sendMsg(it.first, "${el.first} проголосовал за")
+                }
+                VoteResult.DISAGREE -> {
+                    this.sendMsg(it.first, "${el.first} проголосовал против")
+                }
+                else -> {
+                    this.sendMsg(it.first, "Голос ${el.first} не учтен")
+                }
+            }
+        }
+    }
+}
+
 fun Bot.mission(infoResponse: InfoResponse, client: HttpClient, config: AppConfig) {
     val traitors = infoResponse.traitors
     val leader = infoResponse.missionLeader
     val notTraitors = infoResponse.notTraitors
     val countSuccessMissions = infoResponse.countSuccessedMissions
     val countFailedMissions = infoResponse.countFailedMissions
-    val players = traitors + notTraitors
+    val players = (traitors + notTraitors).shuffled()
     val successVotes = infoResponse.lastMissionVotes.first
     val failVotes = infoResponse.lastMissionVotes.second
+    val missionResult = infoResponse.lastMissionResult
     when (infoResponse.gameState) {
         GameState.TEAMING -> {
-            players.forEach {
-                this.sendMsg(it.first, "Миссия завершилась c исходом: ${infoResponse.lastMissionResult}")
-                this.sendMsg(it.first, "Успех - $successVotes Фейл - $failVotes")
-                this.sendMsg(it.first, "Счет сопротивление $countSuccessMissions, предатели $countFailedMissions")
-            }
+            sendMissionResult(players,
+                missionResult,
+                successVotes,
+                failVotes,
+                countSuccessMissions,
+                countFailedMissions)
             players.forEach {
                 this.sendMsg(it.first, "Новый лидер: ${leader.second}")
             }
-            this.sendMsg(
-                leader.first, "Вы лидер. Набирайте команду",
-                Buttons.getTeamingButtons((players - leader).shuffled())
-            )
+            this.notifyLeader(leader, players)
         }
         GameState.END -> {
-            players.forEach {
-                this.sendMsg(it.first, "Миссия завершилась c исходом: ${infoResponse.lastMissionResult}")
-                this.sendMsg(it.first, "Счет сопротивленцы $countSuccessMissions, предатели $countFailedMissions")
-            }
+            sendMissionResult(players,
+                missionResult,
+                successVotes,
+                failVotes,
+                countSuccessMissions,
+                countFailedMissions)
             this.gameOver(infoResponse, client, config)
         }
+    }
+}
+
+fun Bot.sendMissionResult(
+    players: List<Pair<Long, String>>,
+    missionResult: MissionResult,
+    successVotes: Int,
+    failVotes: Int,
+    countSuccessMissions: Int,
+    countFailedMissions: Int
+) {
+    players.forEach {
+        if(missionResult == MissionResult.SUCCESS){
+            this.sendMsg(it.first, "Миссия прошла успешно")
+        } else if(missionResult == MissionResult.FAIL){
+            this.sendMsg(it.first, "Произошел саботаж! Миссия провалилась")
+        }
+        this.sendMsg(it.first, "Количество игроков проголосовавших за успех миссии: $successVotes")
+        this.sendMsg(it.first, "Количество игроков проголосовавших за провал миссии: $failVotes")
+        this.sendMsg(it.first, "Счет: сопротивление $countSuccessMissions, предатели $countFailedMissions")
     }
 }
 
 fun Bot.gameOver(infoResponse: InfoResponse, client: HttpClient, config: AppConfig) {
     val traitors = infoResponse.traitors
     val notTraitors = infoResponse.notTraitors
-    val players = traitors + notTraitors
-    val traitorsNames = "Список предателей: \n${getNames(traitors)}"
+    val players = (traitors + notTraitors).shuffled()
+    val traitorsNames = "Список предателей: \n${getPlayersNames(traitors)}"
     when (infoResponse.winner) {
         Role.RESISTANCE -> {
             players.forEach {
@@ -223,7 +254,7 @@ fun Bot.gameOver(infoResponse: InfoResponse, client: HttpClient, config: AppConf
         }
         else -> {
             players.forEach {
-                this.sendMsg(it.first, "Игра закончилась по тех причинам.\n$traitorsNames", Buttons.START_BUTTONS)
+                this.sendMsg(it.first, "Игра досрочно закончилась\n$traitorsNames", Buttons.START_BUTTONS)
             }
         }
     }

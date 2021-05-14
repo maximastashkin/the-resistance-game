@@ -8,6 +8,7 @@ class Buttons {
         val START_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("Создать", "create"),
             InlineKeyboardButton.CallbackData("Войти", "join"),
+            InlineKeyboardButton.CallbackData("Правила", "rules"),
         )
 
         val LOBBY_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
@@ -21,7 +22,7 @@ class Buttons {
 
         val MISSION_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("Успех", "missionSuccess"),
-            InlineKeyboardButton.CallbackData("Фейл", "missionFail"),
+            InlineKeyboardButton.CallbackData("Саботаж", "missionFail"),
         )
 
         val MISSION_FOR_NOT_TRAITORS = InlineKeyboardMarkup.createSingleRowKeyboard(

@@ -20,7 +20,7 @@ fun Application.pingClient(config: AppConfig, client: HttpClient, bot: Bot) {
     launch {
         for (event in ticker) {
             val ids: List<Long> = client
-                .get<HttpResponse>(config.server.url + "game/getallactiveusers")
+                .get<HttpResponse>(config.server.url + config.server.getAllActiveUsers)
                 .receive()
             pingIds(ids, config, client, bot)
         }

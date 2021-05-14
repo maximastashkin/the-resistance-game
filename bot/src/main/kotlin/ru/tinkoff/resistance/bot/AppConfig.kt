@@ -24,5 +24,6 @@ data class ServerConfig(
     val choosePlayerForMission: String,
     val voteForTeam: String,
     val missionAction: String,
-    val tickRate: Long
+    val tickRate: Long,
+    val getAllActiveUsers: String
 )
