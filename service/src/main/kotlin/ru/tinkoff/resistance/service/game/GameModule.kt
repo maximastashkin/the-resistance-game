@@ -77,6 +77,7 @@ fun Application.gameModule() {
                             apiId == hostId
                         )
                     )
+                    controller.hostLeave(game.id, service, playerService)
                 } else {
                     call.respond(HttpStatusCode.BadRequest)
                 }
