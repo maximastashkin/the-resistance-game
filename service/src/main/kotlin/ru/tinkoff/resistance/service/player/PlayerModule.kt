@@ -15,6 +15,11 @@ import ru.tinkoff.resistance.model.request.PlayerCreateRequest
 fun Application.playerModule() {
     val service: PlayerService by closestDI().instance()
     routing {
+        route("/") {
+            get {
+                call.respond(HttpStatusCode.OK)
+            }
+        }
         route("/player") {
             post {
                 val request = call.receive<PlayerCreateRequest>()
