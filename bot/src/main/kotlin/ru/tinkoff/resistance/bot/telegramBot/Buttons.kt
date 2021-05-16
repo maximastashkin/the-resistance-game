@@ -8,8 +8,7 @@ class Buttons {
         val START_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(
             InlineKeyboardButton.CallbackData("Создать", "create"),
             InlineKeyboardButton.CallbackData("Войти", "join"),
-            InlineKeyboardButton.CallbackData("Правила", "rules"),
-            InlineKeyboardButton.Url("Правила", "https://tesera.ru/images/items/104070/Resistance_V2_rules.pdf")
+            InlineKeyboardButton.Url("Правила", "https://hobbygames.ru/download/rules/Soprotivlenie_2_izdanie_Rules.pdf")
         )
 
         val LOBBY_BUTTONS = InlineKeyboardMarkup.createSingleRowKeyboard(

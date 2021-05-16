@@ -51,7 +51,7 @@ fun Bot.joinLobby(players: List<Pair<Long, String>>) {
 }
 
 fun Bot.leaveLobby(leaveInfo: Pair<List<Pair<Long, String>>, Boolean>, leaver: Pair<Long, String>) {
-    val players = leaveInfo.first
+    val players = leaveInfo.first - leaver
     val isHost = leaveInfo.second
     players.forEach {
         this.sendMsg(it.first, "${leaver.second} покинул лобби")
@@ -154,7 +154,7 @@ fun Bot.voteForTeam(infoResponse: InfoResponse, client: HttpClient, config: AppC
         }
         GameState.END -> {
             players.forEach {
-                this.sendMsg(it.first, "Голосование прервалось 5 раз. Игра окончена")
+                this.sendMsg(it.first, "Голосование прервалось 5 раз")
             }
             gameOver(infoResponse, client, config)
         }
@@ -266,7 +266,7 @@ fun Bot.sendResults(winners: List<Pair<Long, String>>, losers: List<Pair<Long, S
         this.sendMsg(it.first, "Вы одержали победу! Сыграем еще?", Buttons.START_BUTTONS)
     }
     losers.forEach {
-        this.sendMsg(it.first, "К сожалению, Вы проиграли! Сыграем еще?", Buttons.START_BUTTONS)
+        this.sendMsg(it.first, "К сожалению, Вы проиграли. Сыграем еще?", Buttons.START_BUTTONS)
     }
 }
 
