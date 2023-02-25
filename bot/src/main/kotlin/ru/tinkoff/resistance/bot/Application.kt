@@ -13,6 +13,8 @@ import ru.tinkoff.resistance.bot.telegramBot.botModule
 
 fun main() {
     val config = ConfigFactory.load().extract<AppConfig>()
+    println(config.telegram.token)
+    println(config.telegram.webhookUrl)
     val client = HttpClient(CIO) {
         install(JsonFeature)
         expectSuccess = false

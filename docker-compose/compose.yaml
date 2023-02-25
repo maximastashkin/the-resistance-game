@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.9'
 
 services:
   service:
@@ -8,11 +8,11 @@ services:
     depends_on:
       - resistance-db
     environment:
-      - JDBC_URL=${JDBC_URL}
-      - JDBC_USER=${POSTGRES_USER}
-      - JDBC_PASSWORD=${POSTGRES_PASSWORD}
+      JDBC_URL: jdbc:postgresql://resistance-db:5432/resistance_db
+      JDBC_USER: postgres
+      JDBC_PASSWORD: sa
     ports:
-      - 8086:8080
+      - "8086:8080"
   bot:
     container_name: bot
     image: bot:0.0.1
@@ -20,17 +20,17 @@ services:
     depends_on:
       - service
     environment:
-      - TELEGRAM_API_KEY=${API_KEY}
-      - TELEGRAM_WEBHOOK_URL=${WEBHOOK_URL}
-      - SERVER_URL=${SERVER_URL}
+      TELEGRAM_API_KEY: <token>
+      TELEGRAM_WEBHOOK_URL: <hook_urk>
+      SERVER_URL: http://service:8080/
     ports:
-      - 8085:8081
+      - "8085:8081"
   resistance-db:
     container_name: resistance-db
     image: postgres:11
     environment:
-     - POSTGRES_DB=${POSTGRES_NAME}
-     - POSTRGRES_USER=${POSTGRES_USER}
-     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      POSTGRES_DB: resistance_db
+      POSTRGRES_USER: postgres
+      POSTGRES_PASSWORD: sa
     ports:
-      - 5433:5432
+      - "5433:5432"

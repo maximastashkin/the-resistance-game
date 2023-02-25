@@ -19,6 +19,8 @@ import ru.tinkoff.resistance.service.plugin.configureSerialization
 
 fun main() {
     val config = ConfigFactory.load().extract<AppConfig>()
+    println(config.dataBase.url)
+    println(config.dataBase.user)
     migrate(config.dataBase)
     val engine = embeddedServer(Netty, port = config.http.port) {
         di {
